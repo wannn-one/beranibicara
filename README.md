@@ -27,8 +27,8 @@ Untuk menjalankan proyek ini secara lokal, ikuti langkah-langkah berikut:
 
 1.  **Clone repository ini:**
     ```sh
-    git clone [https://github.com/wannn-one/beranibicara.git](https://github.com/wannn-one/beranibicara.git)
-    cd berani-bicara-app
+    git clone https://github.com/wannn-one/beranibicara.git
+    cd beranibicara
     ```
 
 2.  **Install dependencies Flutter:**
