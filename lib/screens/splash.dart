@@ -1,11 +1,13 @@
 import 'dart:async';
-import 'package:flutter/material.dart';
+import 'package:beranibicara/screens/complete_profile.dart';
+import 'package:beranibicara/screens/dashboard_student.dart';
+import 'package:beranibicara/screens/dashboard_teacher.dart';
+import 'package:beranibicara/screens/dashboard_admin.dart';
 import 'package:beranibicara/screens/welcome.dart';
+import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import 'package:beranibicara/screens/dashboard_student.dart';
-import 'package:beranibicara/screens/complete_profile.dart';
-
+// Instance Supabase
 final supabase = Supabase.instance.client;
 
 class SplashScreen extends StatefulWidget {
@@ -19,45 +21,71 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
+    // Memanggil fungsi redirect saat halaman ini pertama kali dimuat
     _redirect();
   }
 
   Future<void> _redirect() async {
+    // Memberi jeda sesaat agar frame pertama selesai di-build
+    // dan menghindari error transisi yang terlalu cepat.
     await Future.delayed(Duration.zero);
     if (!mounted) return;
 
     final session = supabase.auth.currentSession;
 
     if (session != null) {
-      // Pengguna sudah login, sekarang cek profilnya
+      // Jika ada sesi (pengguna sudah login), periksa profilnya
       try {
         final profile = await supabase
             .from('profiles')
-            .select('kelas_id')
+            .select('role, kelas_id') // Ambil peran dan id kelas
             .eq('id', session.user.id)
             .single();
 
         if (!mounted) return;
 
-        if (profile['kelas_id'] == null) {
-          // Jika kelas_id kosong, paksa isi profil
+        final userRole = profile['role'];
+
+        // Jika user adalah siswa dan belum melengkapi profil (kelas_id masih kosong)
+        if (userRole == 'siswa' && profile['kelas_id'] == null) {
           Navigator.of(context).pushReplacement(
             MaterialPageRoute(builder: (context) => const CompleteProfileScreen()),
           );
-        } else {
-          // Jika kelas_id sudah ada, langsung ke Dashboard
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (context) => const DashboardScreen()),
-          );
+          return; // Hentikan eksekusi lebih lanjut
+        }
+
+        // Jika profil sudah lengkap, arahkan berdasarkan peran
+        switch (userRole) {
+          case 'siswa':
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(builder: (context) => const StudentDashboardScreen()),
+            );
+            break;
+          case 'guru':
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(builder: (context) => const TeacherDashboardScreen()),
+            );
+            break;
+          case 'tppk':
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(builder: (context) => const AdminDashboardScreen()),
+            );
+            break;
+          default:
+            // Jika peran tidak dikenali, arahkan ke halaman welcome
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(builder: (context) => const WelcomeScreen()),
+            );
         }
       } catch (error) {
-        // Jika ada error (misal profil belum ada), anggap sebagai pengguna baru
-         Navigator.of(context).pushReplacement(
+        // Jika gagal mengambil data profil, anggap sesi tidak valid
+        await supabase.auth.signOut();
+        Navigator.of(context).pushReplacement(
           MaterialPageRoute(builder: (context) => const WelcomeScreen()),
         );
       }
     } else {
-      // Pengguna belum login
+      // Jika tidak ada sesi (pengguna belum login), arahkan ke halaman welcome
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(builder: (context) => const WelcomeScreen()),
       );
@@ -66,42 +94,11 @@ class _SplashScreenState extends State<SplashScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Stack(
-        fit: StackFit.expand,
-        children: [
-          Image.asset(
-            "assets/images/background.png",
-            fit: BoxFit.cover,
-          ),
-          Container(
-            color: Colors.white.withValues(alpha: 0.8),
-          ),
-          Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.only(left: 20),
-                  child: Image.asset(
-                    "assets/images/logo.png",
-                    width: 500,
-                    height: 300,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                const Text(
-                  "Welcome",
-                  style: TextStyle(
-                    fontFamily: 'LilyScriptOne',
-                    fontSize: 45,
-                    color: Color(0xFF3C83A8),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
+    // UI untuk splash screen ini hanya loading indicator
+    // karena tugas utamanya adalah logika redirect di latar belakang.
+    return const Scaffold(
+      body: Center(
+        child: CircularProgressIndicator(),
       ),
     );
   }

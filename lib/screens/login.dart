@@ -223,21 +223,13 @@ class _LoginScreenState extends State<LoginScreen> {
             // Forgot Password Link
             Align(
               alignment: Alignment.centerRight,
-              child: GestureDetector(
-                onTap: () {
+              child: TextButton(
+                onPressed: () {
                   Navigator.of(context).push(
                     MaterialPageRoute(builder: (context) => const ForgotPasswordScreen()),
                   );
                 },
-                child: Text(
-                  'Forgot Password?',
-                  style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.9),
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                    decoration: TextDecoration.underline,
-                  ),
-                ),
+              child: const Text('Lupa Password?', style: TextStyle(color: Colors.white)),
               ),
             ),
             const SizedBox(height: 24),

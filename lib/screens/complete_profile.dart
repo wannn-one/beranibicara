@@ -96,7 +96,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
 
       if (mounted) {
         Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (context) => const DashboardScreen()),
+          MaterialPageRoute(builder: (context) => const StudentDashboardScreen()),
           (route) => false,
         );
       }

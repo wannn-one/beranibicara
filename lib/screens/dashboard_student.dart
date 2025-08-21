@@ -4,14 +4,14 @@ import 'package:beranibicara/screens/welcome.dart';
 
 final supabase = Supabase.instance.client;
 
-class DashboardScreen extends StatefulWidget {
-  const DashboardScreen({super.key});
+class StudentDashboardScreen extends StatefulWidget {
+  const StudentDashboardScreen({super.key});
 
   @override
-  State<DashboardScreen> createState() => _DashboardScreenState();
+  State<StudentDashboardScreen> createState() => _StudentDashboardScreenState();
 }
 
-class _DashboardScreenState extends State<DashboardScreen> {
+class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
   String _userName = 'Siswa';
   bool _isLoading = true;
 

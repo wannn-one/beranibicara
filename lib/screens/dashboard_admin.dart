@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-class DashboardAdmin extends StatelessWidget {
-  const DashboardAdmin({super.key});
+class AdminDashboardScreen extends StatelessWidget {
+  const AdminDashboardScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
