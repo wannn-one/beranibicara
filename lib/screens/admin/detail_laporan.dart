@@ -40,10 +40,20 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
   late Future<Map<String, dynamic>> _reportFuture;
   String? _selectedStatus;
 
+  final _noteController = TextEditingController();
+  String _selectedTahapan = 'verifikasi'; // Nilai default untuk dropdown
+  bool _isAddingNote = false;
+
   @override
   void initState() {
     super.initState();
     _reportFuture = _fetchReportDetails();
+  }
+
+  @override
+  void dispose() {
+    _noteController.dispose();
+    super.dispose();
   }
 
   Future<Map<String, dynamic>> _fetchReportDetails() async {
@@ -52,19 +62,31 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
       final results = await Future.wait<dynamic>([
         supabase
             .from('reports')
-            .select('*, profiles(full_name), kelas:kelas_id(tingkat, jurusan)')
+            .select('*, profiles(full_name, kelas:kelas_id(tingkat, jurusan))')
             .eq('id', widget.reportId)
             .single(),
+        
         supabase.from('evidence').select('file_url').eq('report_id', widget.reportId),
+
+        supabase
+          .from('log_penanganan')
+          .select('*, author:author_id(full_name)') // Join dengan profil penulis catatan
+          .eq('report_id', widget.reportId)
+          .order('created_at', ascending: false),
       ]);
 
       final reportData = results[0] as Map<String, dynamic>;
       final evidenceData = (results[1] as List).map((item) => item as Map<String, dynamic>).toList();
-      
-      reportData['evidence'] = evidenceData; // Gabungkan data bukti ke dalam data laporan
+      final logData = (results[2] as List).cast<Map<String, dynamic>>();
+
+      // Gabungkan data bukti ke dalam data laporan
+      reportData['evidence'] = evidenceData;
+      reportData['log_penanganan'] = logData;
+
       setState(() {
         _selectedStatus = reportData['status'];
       });
+
       return reportData;
     } catch (error) {
       if (mounted) {
@@ -76,7 +98,46 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
     }
   }
 
+  Future<void> _addHandlingLog() async {
+  if (_noteController.text.isEmpty) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Catatan tidak boleh kosong')),
+    );
+    return;
+  }
+  
+  setState(() { _isAddingNote = true; });
 
+  try {
+    await supabase.from('log_penanganan').insert({
+      'report_id': widget.reportId,
+      'author_id': supabase.auth.currentUser!.id,
+      'catatan': _noteController.text.trim(),
+      'tahapan': _selectedTahapan,
+    });
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Catatan baru berhasil ditambahkan!')),
+      );
+      _noteController.clear();
+      // Refresh seluruh data untuk menampilkan catatan baru
+      setState(() {
+        _reportFuture = _fetchReportDetails();
+      });
+    }
+  } catch (error) {
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Gagal menambahkan catatan: $error')),
+      );
+    }
+  } finally {
+    if (mounted) {
+      setState(() { _isAddingNote = false; });
+    }
+  }
+}
   
   Future<void> _updateStatus() async {
     try {
@@ -101,83 +162,36 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
     }
   }
 
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Detail Laporan'),
-      ),
-      body: FutureBuilder<Map<String, dynamic>>(
-        future: _reportFuture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (snapshot.hasError || !snapshot.hasData) {
-            return const Center(child: Text('Gagal memuat data.'));
-          }
-
-          final report = snapshot.data!;
-          final reporterName = report['profiles']?['full_name'] ?? 'Anonim';
-          final reportDate = DateTime.parse(report['created_at']);
-          final formattedDate = DateFormat('EEEE, d MMMM yyyy, HH:mm').format(reportDate);
-          final evidenceList = report['evidence'] as List;
-
-          return SingleChildScrollView(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildDetailRow('Pelapor:', reporterName),
-                _buildDetailRow('Tanggal:', formattedDate),
-                const Divider(height: 32),
-                _buildDetailRow('Deskripsi Kejadian:', report['description']),
-                
-                if (evidenceList.isNotEmpty) ...[
-                  const SizedBox(height: 24),
-                  const Text('Bukti Terlampir:', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: evidenceList.map((evidence) {
-                      return _buildEvidenceItem(evidence['file_url']);
-                    }).toList(),
-                  ),
-                ],
-
-                const Divider(height: 32),
-                
-                const Text('Ubah Status Laporan:', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                const SizedBox(height: 8),
-                DropdownButtonFormField<String>(
-                  initialValue: _selectedStatus,
-                  items: ['baru', 'diproses', 'selesai', 'ditolak']
-                      .map((status) => DropdownMenuItem(value: status, child: Text(status.toUpperCase())))
-                      .toList(),
-                  onChanged: (value) {
-                    if (value != null) {
-                      setState(() { _selectedStatus = value; });
-                    }
-                  },
-                  decoration: const InputDecoration(border: OutlineInputBorder()),
-                ),
-                const SizedBox(height: 24),
-                ElevatedButton(
-                  onPressed: _updateStatus,
-                  style: ElevatedButton.styleFrom(minimumSize: const Size(double.infinity, 50)),
-                  child: const Text('Simpan Perubahan Status'),
-                )
-              ],
-            ),
-          );
-        },
-      ),
-    );
+  Widget _buildLogsList(List logs) {
+  if (logs.isEmpty) {
+    return const Text('Belum ada catatan penanganan.');
   }
+  
+  return ListView.builder(
+    shrinkWrap: true,
+    physics: const NeverScrollableScrollPhysics(),
+    itemCount: logs.length,
+    itemBuilder: (context, index) {
+      final log = logs[index];
+      final logDate = DateTime.parse(log['created_at']);
+      final formattedDate = DateFormat('d MMM yyyy, HH:mm').format(logDate);
 
-  Widget _buildDetailRow(String title, String value) {
+      return Card(
+        margin: const EdgeInsets.only(bottom: 8),
+        child: ListTile(
+          title: Text(log['catatan']),
+          subtitle: Text(
+            'Oleh: ${log['author']['full_name']} • $formattedDate\n'
+            'Tahap: ${log['tahapan'].toUpperCase()}',
+          ),
+          isThreeLine: true,
+        ),
+      );
+    },
+  );
+}
+
+Widget _buildDetailRow(String title, String value) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4.0),
       child: Column(
@@ -246,82 +260,225 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
 
 
   void _showFullScreenEvidence(String url) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return Dialog(
-          backgroundColor: Colors.transparent,
-          child: Stack(
-            children: [
-              // Full screen evidence container
-              Container(
-                width: double.infinity,
-                height: 400,
-                decoration: BoxDecoration(
-                  color: Colors.black87,
-                  borderRadius: BorderRadius.circular(12),
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (BuildContext context) {
+          return Scaffold(
+            backgroundColor: Colors.black,
+            appBar: AppBar(
+              backgroundColor: Colors.black,
+              foregroundColor: Colors.white,
+              title: const Text('Bukti Laporan'),
+              actions: [
+                IconButton(
+                  icon: const Icon(Icons.download),
+                  onPressed: () {
+                    // TODO: Implement download functionality if needed
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Fitur download akan segera tersedia')),
+                    );
+                  },
                 ),
+              ],
+            ),
+            body: Center(
+              child: InteractiveViewer(
+                panEnabled: true,
+                boundaryMargin: const EdgeInsets.all(20),
+                minScale: 0.5,
+                maxScale: 4.0,
                 child: _buildFullScreenRealImage(url),
               ),
-              // Close button
-              Positioned(
-                top: 10,
-                right: 10,
-                child: IconButton(
-                  icon: const Icon(Icons.close, color: Colors.white, size: 30),
-                  onPressed: () => Navigator.of(context).pop(),
-                ),
-              ),
-            ],
-          ),
-        );
-      },
+            ),
+          );
+        },
+      ),
     );
   }
 
 
 
   Widget _buildFullScreenRealImage(String url) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(12),
-      child: CachedNetworkImage(
-        imageUrl: url,
-        width: double.infinity,
-        height: 400,
-        fit: BoxFit.contain,
-        cacheManager: EvidenceCacheManager(),
-        placeholder: (context, url) => const Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              CircularProgressIndicator(color: Colors.white),
-              SizedBox(height: 16),
-              Text(
-                'Memuat gambar...',
-                style: TextStyle(color: Colors.white70),
-              ),
-            ],
-          ),
+    
+    return CachedNetworkImage(
+      imageUrl: url,
+      fit: BoxFit.contain,
+      cacheManager: EvidenceCacheManager(),
+      placeholder: (context, url) => const Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            CircularProgressIndicator(color: Colors.white),
+            SizedBox(height: 16),
+            Text(
+              'Memuat gambar...',
+              style: TextStyle(color: Colors.white70),
+            ),
+          ],
         ),
-        errorWidget: (context, url, error) => const Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.error_outline, color: Colors.white, size: 60),
-              SizedBox(height: 16),
-              Text(
-                'Gagal memuat gambar',
-                style: TextStyle(color: Colors.white, fontSize: 18),
-              ),
-            ],
-          ),
-        ),
-        // High quality for full screen viewing
-        memCacheWidth: 800,
-        memCacheHeight: 800,
       ),
+      errorWidget: (context, url, error) => const Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.error_outline, color: Colors.white, size: 60),
+            SizedBox(height: 16),
+            Text(
+              'Gagal memuat gambar',
+              style: TextStyle(color: Colors.white, fontSize: 18),
+            ),
+            SizedBox(height: 8),
+            Text(
+              'Periksa koneksi internet',
+              style: TextStyle(color: Colors.white54, fontSize: 12),
+            ),
+          ],
+        ),
+      ),
+      // High quality for full screen viewing - no size limit for original size
+      memCacheWidth: null,
+      memCacheHeight: null,
     );
   }
 
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Detail Laporan'),
+        backgroundColor: const Color(0xFF36A395),
+        foregroundColor: Colors.white,
+      ),
+      body: FutureBuilder<Map<String, dynamic>>(
+        future: _reportFuture,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          if (snapshot.hasError || !snapshot.hasData) {
+            return const Center(child: Text('Gagal memuat data.'));
+          }
 
+          final report = snapshot.data!;
+          final reporterName = report['profiles']?['full_name'] ?? 'Anonim';
+          final reportDate = DateTime.parse(report['created_at']);
+          final formattedDate = DateFormat('EEEE, d MMMM yyyy, HH:mm').format(reportDate);
+          final evidenceList = report['evidence'] as List;
+          
+          // Get class information if available
+          String? kelasInfo;
+          if (report['profiles']?['kelas'] != null) {
+            final kelas = report['profiles']['kelas'];
+            kelasInfo = '${kelas['tingkat']}${kelas['jurusan']}';
+          }
+
+          return SingleChildScrollView(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildDetailRow('Pelapor:', reporterName),
+                if (kelasInfo != null)
+                  _buildDetailRow('Kelas:', kelasInfo),
+                _buildDetailRow('Tanggal:', formattedDate),
+                
+                const Divider(height: 32),
+               
+                _buildDetailRow('Deskripsi Kejadian:', report['description']),
+                
+                if (evidenceList.isNotEmpty) ...[
+                  const SizedBox(height: 24),
+                  const Text('Bukti Terlampir:', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 16),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: evidenceList.map((evidence) {
+                      return _buildEvidenceItem(evidence['file_url']);
+                    }).toList(),
+                  ),
+                ],
+
+                const Divider(height: 32),
+
+                // --- BAGIAN BARU: RIWAYAT PENANGANAN ---
+                const Text('Riwayat Penanganan (Log)', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                const SizedBox(height: 16),
+                _buildLogsList(report['log_penanganan'] as List), // Panggil fungsi bantuan
+
+                const Divider(height: 32),
+
+                const Text('Tambah Catatan Baru', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    const Text('Tahapan: '),
+                    const SizedBox(width: 8),
+                    DropdownButton<String>(
+                      value: _selectedTahapan,
+                      items: ['verifikasi', 'mediasi', 'rehabilitasi', 'lainnya']
+                          .map((tahap) => DropdownMenuItem(value: tahap, child: Text(tahap.toUpperCase())))
+                          .toList(),
+                      onChanged: (value) {
+                        if (value != null) {
+                          setState(() { _selectedTahapan = value; });
+                        }
+                      },
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: _noteController,
+                  maxLines: 4,
+                  decoration: const InputDecoration(
+                    hintText: 'Tulis catatan penanganan di sini...',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                ElevatedButton(
+                  onPressed: _isAddingNote ? null : _addHandlingLog,
+                  style: ElevatedButton.styleFrom(
+                    minimumSize: const Size(double.infinity, 50),
+                    backgroundColor: const Color(0xFF36A395),
+                    foregroundColor: Colors.white,
+                  ),
+                  child: _isAddingNote ? const CircularProgressIndicator() : const Text('Tambah Catatan'),
+                ),
+
+                const Divider(height: 32),
+                
+                const Text('Ubah Status Laporan:', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                const SizedBox(height: 16),
+                DropdownButtonFormField<String>(
+                  initialValue: _selectedStatus,
+                  items: ['baru', 'diproses', 'selesai', 'ditolak']
+                      .map((status) => DropdownMenuItem(value: status, child: Text(status.toUpperCase())))
+                      .toList(),
+                  onChanged: (value) {
+                    if (value != null) {
+                      setState(() { _selectedStatus = value; });
+                    }
+                  },
+                  decoration: const InputDecoration(border: OutlineInputBorder()),
+                ),
+                const SizedBox(height: 24),
+                
+                ElevatedButton(
+                  onPressed: _updateStatus,
+                  style: ElevatedButton.styleFrom(
+                    minimumSize: const Size(double.infinity, 50),
+                    backgroundColor: const Color(0xFF36A395),
+                    foregroundColor: Colors.white,
+                  ),
+                  child: const Text('Simpan Perubahan Status'),
+                )
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
 }

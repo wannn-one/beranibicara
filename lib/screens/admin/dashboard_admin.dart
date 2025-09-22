@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:beranibicara/screens/widgets/admin_drawer.dart';
-import 'package:beranibicara/screens/widgets/stat_card.dart';
+import 'package:beranibicara/widgets/admin_drawer.dart';
+import 'package:beranibicara/widgets/stat_card.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
 import 'package:beranibicara/screens/admin/kelola_laporan.dart';
@@ -183,8 +183,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Dashboard Admin'),
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
+        backgroundColor: const Color(0xFF36A395),
+        foregroundColor: Colors.white,
         elevation: 1.0,
       ),
       drawer: const AdminDrawer(currentRoute: AdminDashboardScreen.routeName),
@@ -267,7 +267,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                                       ),
                                     ),
                                     title: Text(
-                                      report['title'] ?? 'Laporan Tanpa Judul',
+                                      report['description'] ?? 'Laporan Tanpa Judul',
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
                                       style: const TextStyle(

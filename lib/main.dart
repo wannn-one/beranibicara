@@ -3,6 +3,11 @@ import 'package:beranibicara/screens/admin/dashboard_admin.dart';
 import 'package:beranibicara/screens/admin/kelola_laporan.dart';
 import 'package:beranibicara/screens/admin/kelola_user.dart';
 import 'package:beranibicara/screens/admin/profile.dart';
+import 'package:beranibicara/screens/student/dashboard_student.dart';
+import 'package:beranibicara/screens/student/create_report.dart';
+import 'package:beranibicara/screens/student/profile.dart';
+import 'package:beranibicara/screens/student/track_report.dart';
+import 'package:beranibicara/screens/student/track_reports_list.dart';
 import 'package:beranibicara/screens/splash.dart';
 import 'package:beranibicara/screens/auth/update_password.dart';
 import 'package:flutter/material.dart';
@@ -71,6 +76,21 @@ class MyApp extends StatelessWidget {
         ManageReportsScreen.routeName: (context) => const ManageReportsScreen(),
         ManageUsersScreen.routeName: (context) => const ManageUsersScreen(),
         AdminProfileScreen.routeName: (context) => const AdminProfileScreen(),
+        StudentDashboardScreen.routeName: (context) => const StudentDashboardScreen(),
+        StudentProfileScreen.routeName: (context) => const StudentProfileScreen(),
+        CreateReportScreen.routeName: (context) => const CreateReportScreen(),
+        TrackReportsListScreen.routeName: (context) => const TrackReportsListScreen(),
+      },
+      onGenerateRoute: (settings) {
+        if (settings.name == TrackingReportScreen.routeName) {
+          final args = settings.arguments as Map<String, dynamic>?;
+          if (args != null && args['reportId'] != null) {
+            return MaterialPageRoute(
+              builder: (context) => TrackingReportScreen(reportId: args['reportId']),
+            );
+          }
+        }
+        return null;
       },
 
     );

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:beranibicara/screens/widgets/admin_drawer.dart';
+import 'package:beranibicara/widgets/admin_drawer.dart';
 import 'package:beranibicara/screens/auth/change_passwort.dart';
 
 final supabase = Supabase.instance.client;
@@ -29,8 +29,8 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Profil Saya'),
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
+        backgroundColor: const Color(0xFF36A395),
+        foregroundColor: Colors.white,
         elevation: 1.0,
       ),
       drawer: const AdminDrawer(currentRoute: AdminProfileScreen.routeName),

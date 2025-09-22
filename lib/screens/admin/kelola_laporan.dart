@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:intl/intl.dart';
-import 'package:beranibicara/screens/widgets/admin_drawer.dart';
+import 'package:beranibicara/widgets/admin_drawer.dart';
 import 'package:beranibicara/screens/admin/detail_laporan.dart';
 
 final supabase = Supabase.instance.client;
@@ -170,8 +170,6 @@ class _ManageReportsScreenState extends State<ManageReportsScreen> {
     return 'Pilih Periode';
   }
 
-
-
   // Fungsi untuk mendapatkan warna berdasarkan status
   Color _getStatusColor(String status) {
     switch (status) {
@@ -188,12 +186,13 @@ class _ManageReportsScreenState extends State<ManageReportsScreen> {
     }
   }
 
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Kelola Laporan Masuk'),
+        backgroundColor: const Color(0xFF36A395),
+        foregroundColor: Colors.white,
       ),
       drawer: const AdminDrawer(currentRoute: ManageReportsScreen.routeName),
       body: Column(
@@ -218,55 +217,56 @@ class _ManageReportsScreenState extends State<ManageReportsScreen> {
                 final reports = _filteredReports;
 
                 return RefreshIndicator(
-                              onRefresh: () async {
-              setState(() {
-                _reportsFuture = _fetchReports();
-              });
-            },
+                  onRefresh: () async {
+                    setState(() {
+                      _reportsFuture = _fetchReports();
+                    });
+                  },
                   child: ListView.builder(
+                    padding: const EdgeInsets.only(top: 8),
                     itemCount: reports.length,
-              itemBuilder: (context, index) {
-                final report = reports[index];
-                // Mengambil nama dari data relasi
-                final reporterName = report['profiles']?['full_name'] ?? 'Anonim';
-                final reportDate = DateTime.parse(report['created_at']);
-                final formattedDate = DateFormat('d MMMM yyyy, HH:mm').format(reportDate);
+                    itemBuilder: (context, index) {
+                      final report = reports[index];
+                      // Mengambil nama dari data relasi
+                      final reporterName = report['profiles']?['full_name'] ?? 'Anonim';
+                      final reportDate = DateTime.parse(report['created_at']);
+                      final formattedDate = DateFormat('d MMMM yyyy, HH:mm').format(reportDate);
 
-                return Card(
-                  margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  child: ListTile(
-                    title: Text(report['description'], maxLines: 2, overflow: TextOverflow.ellipsis),
-                    subtitle: Text('Dilaporkan oleh: $reporterName\nPada: $formattedDate'),
-                    isThreeLine: true,
-                    trailing: Chip(
-                      label: Text(
-                        report['status'],
-                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-                      ),
-                      backgroundColor: _getStatusColor(report['status']),
-                    ),
-                    onTap: () async {
-                      final result = await Navigator.of(context).push<bool>(
-                        MaterialPageRoute(
-                          builder: (context) => ReportDetailScreen(reportId: report['id'] as int),
+                      return Card(
+                        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        child: ListTile(
+                          title: Text(report['description'], maxLines: 2, overflow: TextOverflow.ellipsis),
+                          subtitle: Text('Dilaporkan oleh: $reporterName\nPada: $formattedDate'),
+                          isThreeLine: true,
+                          trailing: Chip(
+                            label: Text(
+                              report['status'],
+                              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                            ),
+                            backgroundColor: _getStatusColor(report['status']),
+                          ),
+                          onTap: () async {
+                            final result = await Navigator.of(context).push<bool>(
+                              MaterialPageRoute(
+                                builder: (context) => ReportDetailScreen(reportId: report['id'] as int),
+                              ),
+                            );
+                            if (result == true && mounted) {
+                              setState(() {
+                                _reportsFuture = _fetchReports();
+                              });
+                            }
+                          },
                         ),
                       );
-                      if (result == true && mounted) {
-                        setState(() {
-                          _reportsFuture = _fetchReports();
-                        });
-                      }
                     },
                   ),
                 );
               },
             ),
-          );
-        },
+          ),
+        ],
       ),
-            ),
-          ],
-        ),
     );
   }
 
