@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:beranibicara/screens/admin/dashboard_admin.dart';
 import 'package:beranibicara/screens/admin/kelola_laporan.dart';
 import 'package:beranibicara/screens/admin/kelola_user.dart';
+import 'package:beranibicara/screens/admin/profile.dart';
 import 'package:beranibicara/screens/splash.dart';
 import 'package:beranibicara/screens/auth/update_password.dart';
 import 'package:flutter/material.dart';
@@ -69,6 +70,7 @@ class MyApp extends StatelessWidget {
         AdminDashboardScreen.routeName: (context) => const AdminDashboardScreen(),
         ManageReportsScreen.routeName: (context) => const ManageReportsScreen(),
         ManageUsersScreen.routeName: (context) => const ManageUsersScreen(),
+        AdminProfileScreen.routeName: (context) => const AdminProfileScreen(),
       },
 
     );

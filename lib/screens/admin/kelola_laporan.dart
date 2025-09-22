@@ -277,7 +277,7 @@ class _ManageReportsScreenState extends State<ManageReportsScreen> {
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: Colors.grey.withValues(alpha: 0.1),
             spreadRadius: 1,
             blurRadius: 3,
             offset: const Offset(0, 1),
@@ -300,7 +300,7 @@ class _ManageReportsScreenState extends State<ManageReportsScreen> {
                     ),
                     const SizedBox(height: 4),
                     DropdownButtonFormField<String>(
-                      value: _selectedStatus,
+                      initialValue: _selectedStatus,
                       decoration: const InputDecoration(
                         contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                         border: OutlineInputBorder(),
@@ -355,7 +355,7 @@ class _ManageReportsScreenState extends State<ManageReportsScreen> {
                     ),
                     const SizedBox(height: 4),
                     DropdownButtonFormField<String>(
-                      value: _selectedDateRange,
+                      initialValue: _selectedDateRange,
                       decoration: const InputDecoration(
                         contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                         border: OutlineInputBorder(),
@@ -412,11 +412,11 @@ class _ManageReportsScreenState extends State<ManageReportsScreen> {
                   ),
                   TextButton(
                     onPressed: _showCustomDatePicker,
-                    child: const Text('Ubah'),
                     style: TextButton.styleFrom(
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                       minimumSize: const Size(0, 32),
                     ),
+                    child: const Text('Ubah'),
                   ),
                 ],
               ),

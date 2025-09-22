@@ -97,7 +97,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text('Gagal mengambil data: $error')));
-        print('Gagal mengambil data: $error');
+        // print('Gagal mengambil data: $error');
       }
     } finally {
       if (mounted) {

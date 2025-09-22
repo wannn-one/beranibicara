@@ -1,6 +1,7 @@
 import 'package:beranibicara/screens/admin/dashboard_admin.dart';
 import 'package:beranibicara/screens/admin/kelola_laporan.dart';
 import 'package:beranibicara/screens/admin/kelola_user.dart';
+import 'package:beranibicara/screens/admin/profile.dart';
 import 'package:beranibicara/screens/splash.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -19,15 +20,41 @@ class AdminDrawer extends StatelessWidget {
       child: ListView(
         padding: EdgeInsets.zero,
         children: [
-          UserAccountsDrawerHeader(
-            accountName: Text(supabase.auth.currentUser?.userMetadata?['full_name'] ?? 'Admin TPPK'),
-            accountEmail: Text(supabase.auth.currentUser?.email ?? ''),
-            currentAccountPicture: const CircleAvatar(
-              backgroundColor: Colors.white,
-              child: Icon(Icons.person, size: 48),
-            ),
+          DrawerHeader(
             decoration: const BoxDecoration(
               color: Color(0xFF36A395),
+            ),
+            child: GestureDetector(
+              onTap: () {
+                // Jika sudah di halaman profil, tutup saja drawer-nya
+                if (currentRoute == AdminProfileScreen.routeName) {
+                  Navigator.pop(context);
+                  return;
+                }
+                // Jika di halaman lain, ganti halaman ke profil
+                Navigator.pop(context); // Tutup drawer dulu
+                Navigator.pushNamed(context, AdminProfileScreen.routeName);
+              },
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  const CircleAvatar(
+                    backgroundColor: Colors.white,
+                    radius: 30,
+                    child: Icon(Icons.person, size: 36),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    supabase.auth.currentUser?.userMetadata?['full_name'] ?? 'Admin TPPK',
+                    style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                  Text(
+                    supabase.auth.currentUser?.email ?? '',
+                    style: const TextStyle(color: Colors.white70, fontSize: 14),
+                  ),
+                ],
+              ),
             ),
           ),
           ListTile(
@@ -60,7 +87,7 @@ class AdminDrawer extends StatelessWidget {
             Navigator.pushReplacementNamed(context, ManageUsersScreen.routeName);
           },
         ),
-          const Divider(),
+        const Divider(),
           ListTile(
             leading: const Icon(Icons.logout_rounded),
             title: const Text('Logout'),

@@ -152,7 +152,7 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
                 const Text('Ubah Status Laporan:', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                 const SizedBox(height: 8),
                 DropdownButtonFormField<String>(
-                  value: _selectedStatus,
+                  initialValue: _selectedStatus,
                   items: ['baru', 'diproses', 'selesai', 'ditolak']
                       .map((status) => DropdownMenuItem(value: status, child: Text(status.toUpperCase())))
                       .toList(),
