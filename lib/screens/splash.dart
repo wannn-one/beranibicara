@@ -1,8 +1,8 @@
 import 'dart:async';
-import 'package:beranibicara/screens/complete_profile.dart';
-import 'package:beranibicara/screens/dashboard_student.dart';
-import 'package:beranibicara/screens/dashboard_teacher.dart';
-import 'package:beranibicara/screens/dashboard_admin.dart';
+import 'package:beranibicara/screens/auth/complete_profile.dart';
+import 'package:beranibicara/screens/student/dashboard_student.dart';
+import 'package:beranibicara/screens/teacher/dashboard_teacher.dart';
+import 'package:beranibicara/screens/admin/dashboard_admin.dart';
 import 'package:beranibicara/screens/welcome.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -79,7 +79,7 @@ class _SplashScreenState extends State<SplashScreen> {
         }
       } catch (error) {
         // Jika gagal mengambil data profil, anggap sesi tidak valid
-        await supabase.auth.signOut();
+        supabase.auth.signOut();
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(builder: (context) => const WelcomeScreen()),
         );

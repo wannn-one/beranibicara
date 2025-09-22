@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:beranibicara/screens/register.dart';
-import 'package:beranibicara/screens/login.dart';
+import 'package:beranibicara/screens/auth/register.dart';
+import 'package:beranibicara/screens/auth/login.dart';
 
 class WelcomeScreen extends StatelessWidget {
   const WelcomeScreen({super.key});

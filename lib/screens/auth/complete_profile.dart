@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:beranibicara/screens/dashboard_student.dart';
+import 'package:beranibicara/screens/student/dashboard_student.dart';
 
 final supabase = Supabase.instance.client;
 

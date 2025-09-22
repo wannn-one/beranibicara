@@ -1,6 +1,9 @@
 import 'dart:async';
+import 'package:beranibicara/screens/admin/dashboard_admin.dart';
+import 'package:beranibicara/screens/admin/kelola_laporan.dart';
+import 'package:beranibicara/screens/admin/kelola_user.dart';
 import 'package:beranibicara/screens/splash.dart';
-import 'package:beranibicara/screens/update_password.dart';
+import 'package:beranibicara/screens/auth/update_password.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -33,6 +36,12 @@ void _setupAuthListener() {
       navigatorKey.currentState?.pushReplacement(
         MaterialPageRoute(builder: (context) => const UpdatePasswordScreen()),
       );
+    } else if (event == AuthChangeEvent.signedIn) {
+      // Kita arahkan ke SplashScreen, biarkan router pintar kita yang bekerja
+      navigatorKey.currentState?.pushAndRemoveUntil(
+        MaterialPageRoute(builder: (context) => const SplashScreen()),
+        (route) => false,
+      );
     }
   });
 }
@@ -54,8 +63,14 @@ class MyApp extends StatelessWidget {
         fontFamily: 'LeagueSpartan', // Menggunakan LeagueSpartan sebagai default
       ),
       debugShowCheckedModeBanner: false,
-      // Titik awal aplikasi tetap SplashScreen
-      home: const SplashScreen(),
+      initialRoute: '/', // Rute awal adalah SplashScreen
+      routes: {
+        '/': (context) => const SplashScreen(),
+        AdminDashboardScreen.routeName: (context) => const AdminDashboardScreen(),
+        ManageReportsScreen.routeName: (context) => const ManageReportsScreen(),
+        ManageUsersScreen.routeName: (context) => const ManageUsersScreen(),
+      },
+
     );
   }
 }
