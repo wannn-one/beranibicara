@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:intl/intl.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 final supabase = Supabase.instance.client;
 
@@ -25,13 +26,19 @@ class _TrackingReportScreenState extends State<TrackingReportScreen> {
 
   Future<Map<String, dynamic>> _fetchReportDetails() async {
     try {
-      // Fetch report details and replies simultaneously
+      // Fetch report details, evidence, and replies simultaneously
       final results = await Future.wait<dynamic>([
         supabase
             .from('reports')
             .select()
             .eq('id', widget.reportId)
             .single(),
+        
+        // Fetch evidence images
+        supabase
+            .from('evidence')
+            .select('file_url')
+            .eq('report_id', widget.reportId),
         
         // Fetch replies from admin
         supabase
@@ -42,9 +49,11 @@ class _TrackingReportScreenState extends State<TrackingReportScreen> {
       ]);
 
       final reportData = results[0] as Map<String, dynamic>;
-      final repliesData = (results[1] as List).cast<Map<String, dynamic>>();
+      final evidenceData = (results[1] as List).cast<Map<String, dynamic>>();
+      final repliesData = (results[2] as List).cast<Map<String, dynamic>>();
 
-      // Add replies to report data
+      // Add evidence and replies to report data
+      reportData['evidence'] = evidenceData;
       reportData['replies'] = repliesData;
 
       return reportData;
@@ -71,6 +80,155 @@ class _TrackingReportScreenState extends State<TrackingReportScreen> {
       default:
         return 0;
     }
+  }
+
+  Widget _buildEvidenceItem(String url) {
+    return GestureDetector(
+      onTap: () => _showFullScreenEvidence(url),
+      child: Container(
+        width: 120,
+        height: 120,
+        margin: const EdgeInsets.all(4),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: const Color(0xFF36A395), width: 2),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Stack(
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(10),
+              child: CachedNetworkImage(
+                imageUrl: url,
+                width: 120,
+                height: 120,
+                fit: BoxFit.cover,
+                placeholder: (context, url) => Container(
+                  width: 120,
+                  height: 120,
+                  color: Colors.grey.shade200,
+                  child: const Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Color(0xFF36A395),
+                        ),
+                        SizedBox(height: 8),
+                        Text(
+                          'Loading...',
+                          style: TextStyle(fontSize: 10, color: Colors.grey),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                errorWidget: (context, url, error) => Container(
+                  width: 120,
+                  height: 120,
+                  color: Colors.red.shade100,
+                  child: const Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.broken_image, color: Colors.red, size: 24),
+                      SizedBox(height: 4),
+                      Text(
+                        'Gagal memuat',
+                        style: TextStyle(color: Colors.red, fontSize: 10),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            Positioned(
+              top: 4,
+              right: 4,
+              child: Container(
+                padding: const EdgeInsets.all(4),
+                decoration: const BoxDecoration(
+                  color: Color(0xFF36A395),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.zoom_in,
+                  color: Colors.white,
+                  size: 16,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showFullScreenEvidence(String imageUrl) {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (BuildContext context) {
+          return Scaffold(
+            backgroundColor: Colors.black,
+            appBar: AppBar(
+              backgroundColor: Colors.black,
+              foregroundColor: Colors.white,
+              title: const Text('Bukti Gambar'),
+            ),
+            body: Center(
+              child: InteractiveViewer(
+                panEnabled: true,
+                boundaryMargin: const EdgeInsets.all(20),
+                minScale: 0.5,
+                maxScale: 4.0,
+                child: CachedNetworkImage(
+                  imageUrl: imageUrl,
+                  fit: BoxFit.contain,
+                  placeholder: (context, url) => const Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        CircularProgressIndicator(color: Colors.white),
+                        SizedBox(height: 16),
+                        Text(
+                          'Memuat gambar...',
+                          style: TextStyle(color: Colors.white70),
+                        ),
+                      ],
+                    ),
+                  ),
+                  errorWidget: (context, url, error) => const Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.error_outline, color: Colors.white, size: 60),
+                        SizedBox(height: 16),
+                        Text(
+                          'Gagal memuat gambar',
+                          style: TextStyle(color: Colors.white, fontSize: 18),
+                        ),
+                        SizedBox(height: 8),
+                        Text(
+                          'Periksa koneksi internet',
+                          style: TextStyle(color: Colors.white54, fontSize: 12),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
   }
 
   Widget _buildRepliesList(List replies) {
@@ -208,6 +366,54 @@ class _TrackingReportScreenState extends State<TrackingReportScreen> {
                     ),
                   ),
                 ),
+                
+                // Evidence Images Section
+                if (report['evidence'] != null && (report['evidence'] as List).isNotEmpty) ...[
+                  const SizedBox(height: 16),
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF36A395).withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: const Color(0xFF36A395).withOpacity(0.3)),
+                    ),
+                    child: const Row(
+                      children: [
+                        Icon(
+                          Icons.photo_library,
+                          color: Color(0xFF36A395),
+                          size: 20,
+                        ),
+                        SizedBox(width: 8),
+                        Text(
+                          'Bukti Gambar (Tap untuk memperbesar)',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF36A395),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[50],
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.grey[300]!),
+                    ),
+                    child: Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      alignment: WrapAlignment.center,
+                      children: (report['evidence'] as List).map((evidence) {
+                        return _buildEvidenceItem(evidence['file_url']);
+                      }).toList(),
+                    ),
+                  ),
+                ],
                 
                 const SizedBox(height: 16),
                 

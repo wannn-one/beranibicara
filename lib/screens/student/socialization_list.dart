@@ -3,13 +3,16 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:beranibicara/widgets/student_drawer.dart';
+import 'package:beranibicara/widgets/teacher_drawer.dart';
 import 'package:beranibicara/screens/student/socialization_detail.dart';
 
 final supabase = Supabase.instance.client;
 
 class SocializationListScreen extends StatefulWidget {
   static const String routeName = '/student-socialization';
-  const SocializationListScreen({super.key});
+  final String? userRole; // 'siswa' atau 'guru'
+  
+  const SocializationListScreen({super.key, this.userRole});
 
   @override
   State<SocializationListScreen> createState() => _SocializationListScreenState();
@@ -20,11 +23,41 @@ class _SocializationListScreenState extends State<SocializationListScreen> {
   List<Map<String, dynamic>> _allContent = [];
   List<Map<String, dynamic>> _filteredContent = [];
   final TextEditingController _searchController = TextEditingController();
+  String _userRole = 'siswa'; // default
 
   @override
   void initState() {
     super.initState();
+    _getUserRole();
     _contentFuture = _fetchContent();
+  }
+
+  Future<void> _getUserRole() async {
+    if (widget.userRole != null) {
+      setState(() {
+        _userRole = widget.userRole!;
+      });
+    } else {
+      try {
+        final userId = supabase.auth.currentUser!.id;
+        final profile = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', userId)
+            .single();
+        
+        if (mounted) {
+          setState(() {
+            _userRole = profile['role'] ?? 'siswa';
+          });
+        }
+      } catch (error) {
+        // Default ke siswa jika error
+        setState(() {
+          _userRole = 'siswa';
+        });
+      }
+    }
   }
 
   @override
@@ -88,7 +121,9 @@ class _SocializationListScreenState extends State<SocializationListScreen> {
         foregroundColor: Colors.white,
         elevation: 1.0,
       ),
-      drawer: const StudentDrawer(currentRoute: SocializationListScreen.routeName),
+      drawer: _userRole == 'guru' 
+          ? const TeacherDrawer(currentRoute: SocializationListScreen.routeName)
+          : const StudentDrawer(currentRoute: SocializationListScreen.routeName),
       body: Column(
         children: [
           // Search Bar

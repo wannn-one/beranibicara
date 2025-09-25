@@ -10,6 +10,9 @@ import 'package:beranibicara/screens/student/track_report.dart';
 import 'package:beranibicara/screens/student/track_reports_list.dart';
 import 'package:beranibicara/screens/student/socialization_list.dart';
 import 'package:beranibicara/screens/admin/kelola_konten.dart';
+import 'package:beranibicara/screens/teacher/dashboard_teacher.dart';
+import 'package:beranibicara/screens/teacher/student_list_screen.dart';
+import 'package:beranibicara/screens/teacher/report_list_screen.dart';
 import 'package:beranibicara/screens/splash.dart';
 import 'package:beranibicara/screens/auth/update_password.dart';
 import 'package:flutter/material.dart';
@@ -84,6 +87,9 @@ class MyApp extends StatelessWidget {
         CreateReportScreen.routeName: (context) => const CreateReportScreen(),
         TrackReportsListScreen.routeName: (context) => const TrackReportsListScreen(),
         SocializationListScreen.routeName: (context) => const SocializationListScreen(),
+        TeacherDashboardScreen.routeName: (context) => const TeacherDashboardScreen(),
+        TeacherStudentListScreen.routeName: (context) => const TeacherStudentListScreen(),
+        TeacherReportListScreen.routeName: (context) => const TeacherReportListScreen(),
       },
       onGenerateRoute: (settings) {
         if (settings.name == TrackingReportScreen.routeName) {
