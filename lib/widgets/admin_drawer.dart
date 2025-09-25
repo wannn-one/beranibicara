@@ -2,6 +2,7 @@ import 'package:beranibicara/screens/admin/dashboard_admin.dart';
 import 'package:beranibicara/screens/admin/kelola_laporan.dart';
 import 'package:beranibicara/screens/admin/kelola_user.dart';
 import 'package:beranibicara/screens/admin/profile.dart';
+import 'package:beranibicara/screens/admin/kelola_konten.dart';
 import 'package:beranibicara/screens/splash.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -79,14 +80,23 @@ class AdminDrawer extends StatelessWidget {
             },
           ),
           ListTile(
-          leading: const Icon(Icons.group_rounded),
-          title: const Text('Kelola Pengguna'),
-          selected: currentRoute == ManageUsersScreen.routeName,
-          onTap: () {
-            Navigator.pop(context);
-            Navigator.pushReplacementNamed(context, ManageUsersScreen.routeName);
-          },
-        ),
+            leading: const Icon(Icons.group_rounded),
+            title: const Text('Kelola Pengguna'),
+            selected: currentRoute == ManageUsersScreen.routeName,
+            onTap: () {
+              Navigator.pop(context);
+              Navigator.pushReplacementNamed(context, ManageUsersScreen.routeName);
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.post_add), // Socialization
+            title: const Text('Kelola Konten'),
+            selected: currentRoute == ManageContentScreen.routeName,
+            onTap: () {
+              Navigator.pop(context);
+              Navigator.pushReplacementNamed(context, ManageContentScreen.routeName);
+            },
+          ),
         const Divider(),
           ListTile(
             leading: const Icon(Icons.logout_rounded),

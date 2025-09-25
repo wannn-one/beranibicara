@@ -8,6 +8,8 @@ import 'package:beranibicara/screens/student/create_report.dart';
 import 'package:beranibicara/screens/student/profile.dart';
 import 'package:beranibicara/screens/student/track_report.dart';
 import 'package:beranibicara/screens/student/track_reports_list.dart';
+import 'package:beranibicara/screens/student/socialization_list.dart';
+import 'package:beranibicara/screens/admin/kelola_konten.dart';
 import 'package:beranibicara/screens/splash.dart';
 import 'package:beranibicara/screens/auth/update_password.dart';
 import 'package:flutter/material.dart';
@@ -75,11 +77,13 @@ class MyApp extends StatelessWidget {
         AdminDashboardScreen.routeName: (context) => const AdminDashboardScreen(),
         ManageReportsScreen.routeName: (context) => const ManageReportsScreen(),
         ManageUsersScreen.routeName: (context) => const ManageUsersScreen(),
+        ManageContentScreen.routeName: (context) => const ManageContentScreen(),
         AdminProfileScreen.routeName: (context) => const AdminProfileScreen(),
         StudentDashboardScreen.routeName: (context) => const StudentDashboardScreen(),
         StudentProfileScreen.routeName: (context) => const StudentProfileScreen(),
         CreateReportScreen.routeName: (context) => const CreateReportScreen(),
         TrackReportsListScreen.routeName: (context) => const TrackReportsListScreen(),
+        SocializationListScreen.routeName: (context) => const SocializationListScreen(),
       },
       onGenerateRoute: (settings) {
         if (settings.name == TrackingReportScreen.routeName) {

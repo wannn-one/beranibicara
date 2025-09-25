@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:beranibicara/widgets/student_drawer.dart';
-import 'package:beranibicara/screens/auth/change_passwort.dart';
+import 'package:beranibicara/screens/auth/verify_current_password.dart';
 
 final supabase = Supabase.instance.client;
 
@@ -249,7 +249,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                           onTap: () {
                             Navigator.of(context).push(
                               MaterialPageRoute(
-                                builder: (context) => const ChangePasswordScreen(),
+                                builder: (context) => const VerifyCurrentPasswordScreen(),
                               ),
                             );
                           },

@@ -3,6 +3,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:beranibicara/screens/student/create_report.dart';
 import 'package:beranibicara/widgets/student_drawer.dart';
 import 'package:beranibicara/screens/student/track_report.dart';
+import 'package:beranibicara/screens/student/socialization_detail.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:intl/intl.dart';
 
 final supabase = Supabase.instance.client;
@@ -19,12 +21,14 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
   String _userName = 'Siswa';
   bool _isLoading = true;
   late Future<List<Map<String, dynamic>>> _reportsFuture;
+  late Future<List<Map<String, dynamic>>> _socializationFuture;
 
   @override
   void initState() {
     super.initState();
     _fetchUserName();
     _reportsFuture = _fetchUserReports();
+    _socializationFuture = _fetchSocializationContent();
   }
 
   Future<void> _fetchUserName() async {
@@ -66,6 +70,21 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Gagal memuat data: $error')));
       }
+      return [];
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> _fetchSocializationContent() async {
+    try {
+      final response = await supabase
+          .from('socialization')
+          .select('*, profiles(full_name)')
+          .order('published_at', ascending: false)
+          .limit(5);
+
+      return (response as List).map((item) => item as Map<String, dynamic>).toList();
+    } catch (error) {
+      debugPrint('Error fetching socialization content: $error');
       return [];
     }
   }
@@ -147,6 +166,198 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                   ),
                   const SizedBox(height: 32),
 
+                  // Bagian Sosialisasi & Edukasi
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Sosialisasi & Edukasi',
+                        style: Theme.of(context).textTheme.headlineSmall,
+                      ),
+                      TextButton(
+                        onPressed: () {
+                          Navigator.pushNamed(context, '/student-socialization');
+                        },
+                        child: const Text(
+                          'Lihat Semua',
+                          style: TextStyle(
+                            color: Color(0xFF36A395),
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  
+                  // Konten Sosialisasi
+                  FutureBuilder<List<Map<String, dynamic>>>(
+                    future: _socializationFuture,
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return const SizedBox(
+                          height: 200,
+                          child: Center(child: CircularProgressIndicator()),
+                        );
+                      }
+                      
+                      if (snapshot.hasError) {
+                        return Container(
+                          height: 120,
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: Colors.red[50],
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Center(
+                            child: Text('Gagal memuat konten sosialisasi'),
+                          ),
+                        );
+                      }
+                      
+                      if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                        return Container(
+                          height: 120,
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: Colors.grey[100],
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.article_outlined, size: 32, color: Colors.grey),
+                                SizedBox(height: 8),
+                                Text('Belum ada konten sosialisasi'),
+                              ],
+                            ),
+                          ),
+                        );
+                      }
+
+                      final contents = snapshot.data!;
+                      return SizedBox(
+                        height: 200,
+                        child: ListView.builder(
+                          scrollDirection: Axis.horizontal,
+                          itemCount: contents.length,
+                          itemBuilder: (context, index) {
+                            final content = contents[index];
+                            final publishedAt = DateTime.parse(content['published_at'] ?? content['created_at']);
+                            final formattedDate = DateFormat('d MMM yyyy').format(publishedAt);
+                            final authorName = content['profiles']?['full_name'] ?? 'TPPK';
+                            final coverImageUrl = content['cover_image_url'] as String?;
+
+                            return Container(
+                              width: 280,
+                              margin: EdgeInsets.only(
+                                right: index < contents.length - 1 ? 16 : 0,
+                              ),
+                              child: Card(
+                                elevation: 2,
+                                child: InkWell(
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => SocializationDetailScreen(content: content),
+                                      ),
+                                    );
+                                  },
+                                  borderRadius: BorderRadius.circular(12),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      // Cover Image
+                                      if (coverImageUrl != null)
+                                        ClipRRect(
+                                          borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+                                          child: CachedNetworkImage(
+                                            imageUrl: coverImageUrl,
+                                            height: 120,
+                                            width: double.infinity,
+                                            fit: BoxFit.cover,
+                                            placeholder: (context, url) => Container(
+                                              height: 120,
+                                              color: Colors.grey[300],
+                                              child: const Center(child: CircularProgressIndicator()),
+                                            ),
+                                            errorWidget: (context, url, error) => Container(
+                                              height: 120,
+                                              color: Colors.grey[300],
+                                              child: const Icon(Icons.broken_image),
+                                            ),
+                                          ),
+                                        ),
+                                      
+                                      Expanded(
+                                        child: Padding(
+                                          padding: const EdgeInsets.all(10),
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                content['title'] ?? 'Tanpa Judul',
+                                                style: const TextStyle(
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 15,
+                                                ),
+                                                maxLines: 2,
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                              const SizedBox(height: 4),
+                                              Expanded(
+                                                child: Text(
+                                                  content['content'] ?? '',
+                                                  maxLines: coverImageUrl != null ? 2 : 2,
+                                                  overflow: TextOverflow.ellipsis,
+                                                  style: TextStyle(
+                                                    color: Colors.grey[700],
+                                                    fontSize: 13,
+                                                  ),
+                                                ),
+                                              ),
+                                              const SizedBox(height: 4),
+                                              Row(
+                                                children: [
+                                                  Icon(Icons.person, size: 11, color: Colors.grey[600]),
+                                                  const SizedBox(width: 2),
+                                                  Expanded(
+                                                    child: Text(
+                                                      authorName,
+                                                      style: TextStyle(color: Colors.grey[600], fontSize: 10),
+                                                      overflow: TextOverflow.ellipsis,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                              Row(
+                                                children: [
+                                                  Icon(Icons.schedule, size: 11, color: Colors.grey[600]),
+                                                  const SizedBox(width: 2),
+                                                  Text(
+                                                    formattedDate,
+                                                    style: TextStyle(color: Colors.grey[600], fontSize: 10),
+                                                  ),
+                                                ],
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 32),
+
                   // Bagian Laporan Saya
                   Text(
                     'Laporan Saya',
@@ -201,7 +412,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                             margin: const EdgeInsets.only(bottom: 12),
                             child: ListTile(
                               title: Text(
-                                report['description'] ?? 'Laporan Tanpa Deskripsi',
+                                report['title'] ?? 'Laporan Tanpa Judul',
                                 maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
                                 style: const TextStyle(fontWeight: FontWeight.w500),

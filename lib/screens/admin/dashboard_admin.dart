@@ -252,7 +252,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                                 separatorBuilder: (context, index) => const Divider(height: 1),
                                 itemBuilder: (context, index) {
                                   final report = _recentReports[index];
-                                  final reporterName = report['profiles']?['full_name'] ?? 'Anonim';
+                                  final isAnonymous = report['is_anonymous'] ?? false;
+                                  final reporterName = isAnonymous ? 'Anonim' : (report['profiles']?['full_name'] ?? 'Unknown');
                                   final createdAt = DateTime.parse(report['created_at']);
                                   final timeAgo = _getTimeAgo(createdAt);
                                   final status = report['status'] ?? 'baru';
@@ -267,7 +268,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                                       ),
                                     ),
                                     title: Text(
-                                      report['description'] ?? 'Laporan Tanpa Judul',
+                                      report['title'] ?? 'Laporan Tanpa Judul',
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
                                       style: const TextStyle(

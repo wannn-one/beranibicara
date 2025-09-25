@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:beranibicara/widgets/admin_drawer.dart';
-import 'package:beranibicara/screens/auth/change_passwort.dart';
+import 'package:beranibicara/screens/auth/change_password.dart';
 
 final supabase = Supabase.instance.client;
 

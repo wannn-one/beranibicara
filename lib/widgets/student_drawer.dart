@@ -3,6 +3,7 @@ import 'package:beranibicara/screens/student/create_report.dart';
 import 'package:beranibicara/screens/student/profile.dart';
 import 'package:beranibicara/screens/student/track_report.dart';
 import 'package:beranibicara/screens/student/track_reports_list.dart';
+import 'package:beranibicara/screens/student/socialization_list.dart';
 import 'package:beranibicara/screens/splash.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -172,6 +173,15 @@ class _StudentDrawerState extends State<StudentDrawer> {
             onTap: () {
               Navigator.pop(context);
               Navigator.pushReplacementNamed(context, TrackReportsListScreen.routeName);
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.article_rounded),
+            title: const Text('Sosialisasi & Edukasi'),
+            selected: widget.currentRoute == SocializationListScreen.routeName,
+            onTap: () {
+              Navigator.pop(context);
+              Navigator.pushReplacementNamed(context, SocializationListScreen.routeName);
             },
           ),
           ListTile(

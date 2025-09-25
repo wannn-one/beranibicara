@@ -15,6 +15,7 @@ class CreateReportScreen extends StatefulWidget {
 }
 
 class _CreateReportScreenState extends State<CreateReportScreen> {
+  final _titleController = TextEditingController();
   final _descriptionController = TextEditingController();
   bool _isAnonymous = false;
   final List<File> _selectedImages = [];
@@ -37,9 +38,16 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
   }
 
   Future<void> _submitReport() async {
-    if (_descriptionController.text.isEmpty) {
+    if (_titleController.text.trim().length < 3) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Deskripsi kejadian tidak boleh kosong.')),
+        const SnackBar(content: Text('Judul laporan minimal 3 karakter.')),
+      );
+      return;
+    }
+    
+    if (_descriptionController.text.trim().length <= 10) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Deskripsi kejadian minimal 10 karakter.')),
       );
       return;
     }
@@ -71,9 +79,10 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
 
       // 2. Insert data laporan utama
       final newReport = {
+        'title': _titleController.text.trim(),
         'description': _descriptionController.text.trim(),
         'is_anonymous': _isAnonymous,
-        'reporter_id': _isAnonymous ? null : userId,
+        'reporter_id': userId, // Selalu pakai userId, tidak pernah null
       };
       final insertedReport = await supabase.from('reports').insert(newReport).select().single();
 
@@ -108,6 +117,7 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
 
   @override
   void dispose() {
+    _titleController.dispose();
     _descriptionController.dispose();
     super.dispose();
   }
@@ -127,6 +137,18 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            const Text('Judul Laporan', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 8),
+            TextFormField(
+              controller: _titleController,
+              maxLines: 1,
+              decoration: const InputDecoration(
+                hintText: 'Berikan judul singkat untuk laporan ini...',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 24),
+            
             const Text('Deskripsikan Kejadian', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
             TextFormField(
@@ -242,7 +264,9 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
               onPressed: _isLoading ? null : _submitReport,
               style: ElevatedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 16),
-                textStyle: const TextStyle(fontSize: 18),
+                textStyle: const TextStyle(fontSize: 16),
+                backgroundColor: const Color(0xFF36A395),
+                foregroundColor: Colors.white,
               ),
               child: _isLoading ? const CircularProgressIndicator() : const Text('Kirim Laporan'),
             ),

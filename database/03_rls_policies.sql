@@ -45,7 +45,10 @@ ON public.reports FOR INSERT TO authenticated WITH CHECK (true);
 
 DROP POLICY IF EXISTS "Allow users to view their own reports" ON public.reports;
 CREATE POLICY "Allow users to view their own reports"
-ON public.reports FOR SELECT TO authenticated USING (auth.uid() = reporter_id);
+ON public.reports FOR SELECT TO authenticated USING (
+  auth.uid() = reporter_id OR 
+  (is_anonymous = true AND reporter_id IS NULL)
+);
 
 DROP POLICY IF EXISTS "Allow TPPK members to view all reports" ON public.reports;
 CREATE POLICY "Allow TPPK members to view all reports"

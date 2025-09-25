@@ -41,8 +41,10 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
   String? _selectedStatus;
 
   final _noteController = TextEditingController();
+  final _replyController = TextEditingController();
   String _selectedTahapan = 'verifikasi'; // Nilai default untuk dropdown
   bool _isAddingNote = false;
+  bool _isAddingReply = false;
 
   @override
   void initState() {
@@ -53,6 +55,7 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
   @override
   void dispose() {
     _noteController.dispose();
+    _replyController.dispose();
     super.dispose();
   }
 
@@ -73,15 +76,24 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
           .select('*, author:author_id(full_name)') // Join dengan profil penulis catatan
           .eq('report_id', widget.reportId)
           .order('created_at', ascending: false),
+
+        // Fetch replies to student
+        supabase
+          .from('balasan_laporan')
+          .select('*, author:author_id(full_name)')
+          .eq('report_id', widget.reportId)
+          .order('created_at', ascending: false),
       ]);
 
       final reportData = results[0] as Map<String, dynamic>;
       final evidenceData = (results[1] as List).map((item) => item as Map<String, dynamic>).toList();
       final logData = (results[2] as List).cast<Map<String, dynamic>>();
+      final repliesData = (results[3] as List).cast<Map<String, dynamic>>();
 
       // Gabungkan data bukti ke dalam data laporan
       reportData['evidence'] = evidenceData;
       reportData['log_penanganan'] = logData;
+      reportData['replies'] = repliesData;
 
       setState(() {
         _selectedStatus = reportData['status'];
@@ -136,9 +148,49 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
     if (mounted) {
       setState(() { _isAddingNote = false; });
     }
-  }
+    }
 }
-  
+
+  Future<void> _addReply() async {
+    if (_replyController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Balasan tidak boleh kosong')),
+      );
+      return;
+    }
+    
+    setState(() { _isAddingReply = true; });
+
+    try {
+      await supabase.from('balasan_laporan').insert({
+        'report_id': widget.reportId,
+        'author_id': supabase.auth.currentUser!.id,
+        'pesan': _replyController.text.trim(),
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Balasan berhasil dikirim ke siswa!')),
+        );
+        _replyController.clear();
+        // Refresh seluruh data untuk menampilkan balasan baru
+        setState(() {
+          _reportFuture = _fetchReportDetails();
+        });
+      }
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Gagal mengirim balasan: $error')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() { _isAddingReply = false; });
+      }
+    }
+  }
+
   Future<void> _updateStatus() async {
     try {
       await supabase
@@ -185,6 +237,34 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
             'Tahap: ${log['tahapan'].toUpperCase()}',
           ),
           isThreeLine: true,
+        ),
+      );
+    },
+  );
+}
+
+Widget _buildRepliesList(List replies) {
+  if (replies.isEmpty) {
+    return const Text('Belum ada balasan yang dikirim ke siswa.');
+  }
+  
+  return ListView.builder(
+    shrinkWrap: true,
+    physics: const NeverScrollableScrollPhysics(),
+    itemCount: replies.length,
+    itemBuilder: (context, index) {
+      final reply = replies[index];
+      final replyDate = DateTime.parse(reply['created_at']);
+      final formattedDate = DateFormat('d MMM yyyy, HH:mm').format(replyDate);
+
+      return Card(
+        margin: const EdgeInsets.only(bottom: 8),
+        child: ListTile(
+          leading: Icon(Icons.reply, color: Colors.blue[600]),
+          title: Text(reply['pesan']),
+          subtitle: Text(
+            'Oleh: ${reply['author']['full_name']} • $formattedDate',
+          ),
         ),
       );
     },
@@ -360,7 +440,8 @@ Widget _buildDetailRow(String title, String value) {
           }
 
           final report = snapshot.data!;
-          final reporterName = report['profiles']?['full_name'] ?? 'Anonim';
+          final isAnonymous = report['is_anonymous'] ?? false;
+          final reporterName = isAnonymous ? 'Anonim' : (report['profiles']?['full_name'] ?? 'Unknown');
           final reportDate = DateTime.parse(report['created_at']);
           final formattedDate = DateFormat('EEEE, d MMMM yyyy, HH:mm').format(reportDate);
           final evidenceList = report['evidence'] as List;
@@ -383,7 +464,8 @@ Widget _buildDetailRow(String title, String value) {
                 _buildDetailRow('Tanggal:', formattedDate),
                 
                 const Divider(height: 32),
-               
+                
+                _buildDetailRow('Judul Laporan:', report['title'] ?? 'Tanpa Judul'),
                 _buildDetailRow('Deskripsi Kejadian:', report['description']),
                 
                 if (evidenceList.isNotEmpty) ...[
@@ -401,7 +483,39 @@ Widget _buildDetailRow(String title, String value) {
 
                 const Divider(height: 32),
 
-                // --- BAGIAN BARU: RIWAYAT PENANGANAN ---
+                // --- BAGIAN BALASAN KE SISWA ---
+                const Text('Balasan ke Siswa', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                const SizedBox(height: 16),
+                _buildRepliesList(report['replies'] as List),
+
+                const SizedBox(height: 16),
+                const Text('Kirim Balasan Baru ke Siswa', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                const SizedBox(height: 8),
+                TextFormField(
+                  controller: _replyController,
+                  maxLines: 3,
+                  decoration: const InputDecoration(
+                    hintText: 'Tulis balasan untuk siswa di sini...',
+                    border: OutlineInputBorder(),
+                    helperText: 'Balasan ini akan dilihat oleh siswa yang melaporkan',
+                  ),
+                ),
+                const SizedBox(height: 16),
+                ElevatedButton(
+                  onPressed: _isAddingReply ? null : _addReply,
+                  style: ElevatedButton.styleFrom(
+                    minimumSize: const Size(double.infinity, 50),
+                    backgroundColor: Colors.blue[600],
+                    foregroundColor: Colors.white,
+                  ),
+                  child: _isAddingReply 
+                    ? const CircularProgressIndicator(color: Colors.white) 
+                    : const Text('Kirim Balasan ke Siswa'),
+                ),
+
+                const Divider(height: 32),
+
+                // --- BAGIAN RIWAYAT PENANGANAN ---
                 const Text('Riwayat Penanganan (Log)', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                 const SizedBox(height: 16),
                 _buildLogsList(report['log_penanganan'] as List), // Panggil fungsi bantuan

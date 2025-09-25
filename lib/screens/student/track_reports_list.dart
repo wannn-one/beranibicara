@@ -28,7 +28,7 @@ class _TrackReportsListScreenState extends State<TrackReportsListScreen> {
       final userId = supabase.auth.currentUser!.id;
       final response = await supabase
           .from('reports')
-          .select('id, description, status, created_at')
+          .select('id, title, description, status, created_at')
           .eq('reporter_id', userId)
           .order('created_at', ascending: false);
 
@@ -170,7 +170,7 @@ class _TrackReportsListScreenState extends State<TrackReportsListScreen> {
               itemCount: reports.length,
               itemBuilder: (context, index) {
                 final report = reports[index];
-                final description = report['description'] ?? 'Laporan Tanpa Deskripsi';
+                final title = report['title'] ?? 'Laporan Tanpa Judul';
                 final status = report['status'] ?? 'baru';
                 final createdAt = DateTime.parse(report['created_at']);
                 final formattedDate = DateFormat('d MMMM yyyy, HH:mm').format(createdAt);
@@ -189,7 +189,7 @@ class _TrackReportsListScreenState extends State<TrackReportsListScreen> {
                       ),
                     ),
                     title: Text(
-                      description,
+                      title,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(

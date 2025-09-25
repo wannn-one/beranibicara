@@ -227,16 +227,17 @@ class _ManageReportsScreenState extends State<ManageReportsScreen> {
                     itemCount: reports.length,
                     itemBuilder: (context, index) {
                       final report = reports[index];
-                      // Mengambil nama dari data relasi
-                      final reporterName = report['profiles']?['full_name'] ?? 'Anonim';
+                      // Mengambil nama dari data relasi, tampilkan "Anonim" jika laporan anonim
+                      final isAnonymous = report['is_anonymous'] ?? false;
+                      final reporterName = isAnonymous ? 'Anonim' : (report['profiles']?['full_name'] ?? 'Unknown');
                       final reportDate = DateTime.parse(report['created_at']);
                       final formattedDate = DateFormat('d MMMM yyyy, HH:mm').format(reportDate);
 
                       return Card(
                         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                         child: ListTile(
-                          title: Text(report['description'], maxLines: 2, overflow: TextOverflow.ellipsis),
-                          subtitle: Text('Dilaporkan oleh: $reporterName\nPada: $formattedDate'),
+                                                  title: Text(report['title'] ?? 'Laporan Tanpa Judul', maxLines: 2, overflow: TextOverflow.ellipsis),
+                        subtitle: Text('Dilaporkan oleh: $reporterName\nPada: $formattedDate'),
                           isThreeLine: true,
                           trailing: Chip(
                             label: Text(
