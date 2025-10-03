@@ -5,6 +5,7 @@ import 'package:beranibicara/screens/teacher/dashboard_teacher.dart';
 import 'package:beranibicara/screens/teacher/student_list_screen.dart';
 import 'package:beranibicara/screens/teacher/report_list_screen.dart';
 import 'package:beranibicara/screens/student/socialization_list.dart';
+import 'package:beranibicara/screens/teacher/mading_kelas_teacher.dart';
 
 final supabase = Supabase.instance.client;
 
@@ -44,15 +45,17 @@ class _TeacherDrawerState extends State<TeacherDrawer> {
             .from('kelas')
             .select('tingkat, jurusan')
             .eq('wali_kelas_id', teacherId)
+            .neq('tingkat', 99)
+            .neq('jurusan', 'X')
             .maybeSingle(),
       ]);
 
-      final profile = results[0] as Map<String, dynamic>;
-      final kelas = results[1] as Map<String, dynamic>?;
+      final profile = results[0];
+      final kelas = results[1];
 
       if (mounted) {
         setState(() {
-          _teacherName = profile['full_name'] ?? 'Guru';
+          _teacherName = profile?['full_name'] ?? 'Guru';
           _teacherEmail = currentUser?.email ?? '';
           _className = kelas != null ? 'Kelas ${kelas['tingkat']} ${kelas['jurusan']}' : '';
           _isLoading = false;
@@ -143,6 +146,15 @@ class _TeacherDrawerState extends State<TeacherDrawer> {
             onTap: () {
               Navigator.pop(context);
               Navigator.pushReplacementNamed(context, SocializationListScreen.routeName);
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.forum_rounded),
+            title: const Text('Mading Kelas'),
+            selected: widget.currentRoute == MadingKelasTeacherScreen.routeName,
+            onTap: () {
+              Navigator.pop(context);
+              Navigator.pushReplacementNamed(context, MadingKelasTeacherScreen.routeName);
             },
           ),
           const Divider(),

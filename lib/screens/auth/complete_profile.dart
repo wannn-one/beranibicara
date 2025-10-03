@@ -30,7 +30,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
 
   Future<void> _getKelasList() async {
     try {
-      final response = await supabase.from('kelas').select('id, tingkat, jurusan');
+      final response = await supabase.from('kelas').select('id, tingkat, jurusan').neq('tingkat', 99).neq('jurusan', 'X');
       final List<Map<String, dynamic>> loadedKelas = (response as List).map((item) => item as Map<String, dynamic>).toList();
       
       setState(() {

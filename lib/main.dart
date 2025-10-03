@@ -9,7 +9,10 @@ import 'package:beranibicara/screens/student/profile.dart';
 import 'package:beranibicara/screens/student/track_report.dart';
 import 'package:beranibicara/screens/student/track_reports_list.dart';
 import 'package:beranibicara/screens/student/socialization_list.dart';
+import 'package:beranibicara/screens/student/mading_kelas.dart';
 import 'package:beranibicara/screens/admin/kelola_konten.dart';
+import 'package:beranibicara/screens/admin/mading_kelas_admin.dart';
+import 'package:beranibicara/screens/teacher/mading_kelas_teacher.dart';
 import 'package:beranibicara/screens/teacher/dashboard_teacher.dart';
 import 'package:beranibicara/screens/teacher/student_list_screen.dart';
 import 'package:beranibicara/screens/teacher/report_list_screen.dart';
@@ -18,6 +21,7 @@ import 'package:beranibicara/screens/auth/update_password.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:beranibicara/services/fcm_service.dart';
 
 // Kunci global untuk mengakses Navigator
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
@@ -30,6 +34,9 @@ Future<void> main() async {
     url: dotenv.env['SUPABASE_URL']!,
     anonKey: dotenv.env['SUPABASE_ANON_KEY']!,
   );
+
+  // Initialize FCM Service
+  await FCMService.initialize();
 
   // Setup listener di sini, di tempat yang selalu aktif
   _setupAuthListener();
@@ -48,11 +55,19 @@ void _setupAuthListener() {
         MaterialPageRoute(builder: (context) => const UpdatePasswordScreen()),
       );
     } else if (event == AuthChangeEvent.signedIn) {
+      // User login, initialize FCM setelah delay untuk menunggu profile dibuat
+      Future.delayed(const Duration(seconds: 3), () {
+        FCMService.initialize();
+      });
+      
       // Kita arahkan ke SplashScreen, biarkan router pintar kita yang bekerja
       navigatorKey.currentState?.pushAndRemoveUntil(
         MaterialPageRoute(builder: (context) => const SplashScreen()),
         (route) => false,
       );
+    } else if (event == AuthChangeEvent.signedOut) {
+      // User logout, delete FCM token
+      FCMService.deleteTokenFromDatabase();
     }
   });
 }
@@ -87,6 +102,9 @@ class MyApp extends StatelessWidget {
         CreateReportScreen.routeName: (context) => const CreateReportScreen(),
         TrackReportsListScreen.routeName: (context) => const TrackReportsListScreen(),
         SocializationListScreen.routeName: (context) => const SocializationListScreen(),
+        MadingKelasScreen.routeName: (context) => const MadingKelasScreen(),
+        MadingKelasAdminScreen.routeName: (context) => const MadingKelasAdminScreen(),
+        MadingKelasTeacherScreen.routeName: (context) => const MadingKelasTeacherScreen(),
         TeacherDashboardScreen.routeName: (context) => const TeacherDashboardScreen(),
         TeacherStudentListScreen.routeName: (context) => const TeacherStudentListScreen(),
         TeacherReportListScreen.routeName: (context) => const TeacherReportListScreen(),

@@ -96,6 +96,27 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
         await supabase.from('evidence').insert(evidenceMaps);
       }
 
+      // 4. Panggil Edge Function untuk kirim notifikasi ke admin
+      try {
+        
+        // Manual format untuk memastikan data clean
+        final cleanReportData = {
+          'id': insertedReport['id'],
+          'reporter_id': insertedReport['reporter_id'],
+          'title': insertedReport['title'],
+          'description': insertedReport['description'],
+          'status': insertedReport['status'],
+          'is_anonymous': insertedReport['is_anonymous'],
+          'created_at': insertedReport['created_at'],
+        };
+        
+        await supabase.functions.invoke('send-new-report-notification', body: {
+          'record': cleanReportData
+        });
+      } catch (notifError) {
+        // Don't fail the whole process if notification fails
+      }
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Laporan berhasil dikirim!')),

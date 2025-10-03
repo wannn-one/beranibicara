@@ -5,6 +5,7 @@ import 'package:beranibicara/widgets/stat_card.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
 import 'package:beranibicara/screens/admin/kelola_laporan.dart';
+import 'package:beranibicara/screens/admin/detail_laporan.dart';
 
 // Mengambil instance Supabase dari main.dart
 final supabase = Supabase.instance.client;
@@ -306,13 +307,17 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                                         ),
                                       ),
                                     ),
-                                    onTap: () {
-                                      // Navigasi ke detail laporan atau langsung ke halaman manage reports
-                                      Navigator.pushNamed(
-                                        context, 
-                                        ManageReportsScreen.routeName,
-                                        arguments: {'reportId': report['id']},
+                                    onTap: () async {
+                                      // Navigate directly to report detail
+                                      final result = await Navigator.of(context).push<bool>(
+                                        MaterialPageRoute(
+                                          builder: (context) => ReportDetailScreen(reportId: report['id'] as int),
+                                        ),
                                       );
+                                      // Refresh dashboard data if report was updated
+                                      if (result == true && mounted) {
+                                        _fetchDashboardData();
+                                      }
                                     },
                                   );
                                 },
@@ -390,6 +395,23 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                             LineChartData(
                               gridData: const FlGridData(show: true),
                               borderData: FlBorderData(show: true),
+                              lineTouchData: LineTouchData(
+                                enabled: true,
+                                touchTooltipData: LineTouchTooltipData(
+                                  getTooltipItems: (List<LineBarSpot> touchedSpots) {
+                                    return touchedSpots.map((LineBarSpot touchedSpot) {
+                                      final value = touchedSpot.y.toInt();
+                                      return LineTooltipItem(
+                                        '$value Laporan',
+                                        const TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      );
+                                    }).toList();
+                                  },
+                                ),
+                              ),
                               titlesData: FlTitlesData(
                                 leftTitles: const AxisTitles(
                                   sideTitles: SideTitles(showTitles: false),
@@ -421,7 +443,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                               lineBarsData: [
                                 LineChartBarData(
                                   spots: _chartSpots,
-                                  isCurved: true,
+                                  isCurved: false,
                                   color: Colors.blue,
                                   barWidth: 4,
                                   isStrokeCapRound: true,
@@ -429,7 +451,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                                     show: true,
                                     color: Colors.blue.withValues(alpha: 0.3),
                                   ),
-                                  dotData: const FlDotData(show: false),
+                                  dotData: const FlDotData(show: true),
                                 ),
                               ],
                             ),

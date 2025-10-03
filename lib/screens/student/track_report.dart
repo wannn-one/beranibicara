@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:beranibicara/services/image_download_service.dart';
 
 final supabase = Supabase.instance.client;
 
@@ -94,7 +95,7 @@ class _TrackingReportScreenState extends State<TrackingReportScreen> {
           border: Border.all(color: const Color(0xFF36A395), width: 2),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.1),
+              color: Colors.black.withValues(alpha: 0.1),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -181,6 +182,18 @@ class _TrackingReportScreenState extends State<TrackingReportScreen> {
               backgroundColor: Colors.black,
               foregroundColor: Colors.white,
               title: const Text('Bukti Gambar'),
+              actions: [
+                IconButton(
+                  icon: const Icon(Icons.download),
+                  onPressed: () async {
+                    await ImageDownloadService.downloadImage(
+                      context,
+                      imageUrl,
+                      customFileName: 'bukti_laporan_${DateTime.now().millisecondsSinceEpoch}.jpg',
+                    );
+                  },
+                ),
+              ],
             ),
             body: Center(
               child: InteractiveViewer(
@@ -373,9 +386,9 @@ class _TrackingReportScreenState extends State<TrackingReportScreen> {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF36A395).withOpacity(0.1),
+                      color: const Color(0xFF36A395).withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: const Color(0xFF36A395).withOpacity(0.3)),
+                      border: Border.all(color: const Color(0xFF36A395).withValues(alpha: 0.3)),
                     ),
                     child: const Row(
                       children: [

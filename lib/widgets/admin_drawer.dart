@@ -3,6 +3,7 @@ import 'package:beranibicara/screens/admin/kelola_laporan.dart';
 import 'package:beranibicara/screens/admin/kelola_user.dart';
 import 'package:beranibicara/screens/admin/profile.dart';
 import 'package:beranibicara/screens/admin/kelola_konten.dart';
+import 'package:beranibicara/screens/admin/mading_kelas_admin.dart';
 import 'package:beranibicara/screens/splash.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -95,6 +96,15 @@ class AdminDrawer extends StatelessWidget {
             onTap: () {
               Navigator.pop(context);
               Navigator.pushReplacementNamed(context, ManageContentScreen.routeName);
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.forum_rounded),
+            title: const Text('Mading Kelas'),
+            selected: currentRoute == MadingKelasAdminScreen.routeName,
+            onTap: () {
+              Navigator.pop(context);
+              Navigator.pushReplacementNamed(context, MadingKelasAdminScreen.routeName);
             },
           ),
         const Divider(),

@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:beranibicara/widgets/admin_drawer.dart';
+import 'package:beranibicara/services/image_download_service.dart';
 
 final supabase = Supabase.instance.client;
 
@@ -889,6 +890,18 @@ class ContentDetailScreen extends StatelessWidget {
               backgroundColor: Colors.black,
               foregroundColor: Colors.white,
               title: const Text('Gambar Cover'),
+              actions: [
+                IconButton(
+                  icon: const Icon(Icons.download),
+                  onPressed: () async {
+                    await ImageDownloadService.downloadImage(
+                      context,
+                      imageUrl,
+                      customFileName: 'sosialisasi_cover_${DateTime.now().millisecondsSinceEpoch}.jpg',
+                    );
+                  },
+                ),
+              ],
             ),
             body: Center(
               child: InteractiveViewer(

@@ -88,10 +88,11 @@ class TeacherStudentList extends StatelessWidget {
                   if (!isLast) const Divider(height: 8),
                 ],
               );
-            }).toList(),
-          ],
-        ),
+            }
+          ),
+        ],
       ),
-    );
+    ),
+  );
   }
 } 

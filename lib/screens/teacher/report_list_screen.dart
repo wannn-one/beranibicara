@@ -59,6 +59,8 @@ class _TeacherReportListScreenState extends State<TeacherReportListScreen> {
           .from('kelas')
           .select('id, tingkat, jurusan')
           .eq('wali_kelas_id', teacherId)
+          .neq('tingkat', 99)
+          .neq('jurusan', 'X')
           .single();
 
       final kelasId = kelasResponse['id'];
@@ -171,35 +173,35 @@ class _TeacherReportListScreenState extends State<TeacherReportListScreen> {
     _applyFilters();
   }
 
-  Color _getStatusColor(String status) {
-    switch (status) {
-      case 'baru':
-        return Colors.blue;
-      case 'diproses':
-        return Colors.orange;
-      case 'selesai':
-        return Colors.green;
-      case 'ditolak':
-        return Colors.red;
-      default:
-        return Colors.grey;
-    }
-  }
+  // Color _getStatusColor(String status) {
+  //   switch (status) {
+  //     case 'baru':
+  //       return Colors.blue;
+  //     case 'diproses':
+  //       return Colors.orange;
+  //     case 'selesai':
+  //       return Colors.green;
+  //     case 'ditolak':
+  //       return Colors.red;
+  //     default:
+  //       return Colors.grey;
+  //   }
+  // }
 
-  String _getStatusLabel(String status) {
-    switch (status) {
-      case 'baru':
-        return 'Baru';
-      case 'diproses':
-        return 'Diproses';
-      case 'selesai':
-        return 'Selesai';
-      case 'ditolak':
-        return 'Ditolak';
-      default:
-        return status;
-    }
-  }
+  // String _getStatusLabel(String status) {
+  //   switch (status) {
+  //     case 'baru':
+  //       return 'Baru';
+  //     case 'diproses':
+  //       return 'Diproses';
+  //     case 'selesai':
+  //       return 'Selesai';
+  //     case 'ditolak':
+  //       return 'Ditolak';
+  //     default:
+  //       return status;
+  //   }
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -243,7 +245,7 @@ class _TeacherReportListScreenState extends State<TeacherReportListScreen> {
                           Expanded(
                             flex: 2,
                             child: DropdownButtonFormField<String>(
-                              value: _selectedStatus,
+                              initialValue: _selectedStatus,
                               decoration: InputDecoration(
                                 labelText: 'Status',
                                 border: OutlineInputBorder(

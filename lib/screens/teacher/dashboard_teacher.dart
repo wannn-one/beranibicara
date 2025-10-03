@@ -39,6 +39,8 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
           .from('kelas')
           .select('id, tingkat, jurusan')
           .eq('wali_kelas_id', teacherId)
+          .neq('tingkat', 99)
+          .neq('jurusan', 'X')
           .single();
 
       final kelasId = kelasResponse['id'];

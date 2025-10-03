@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
+import 'package:beranibicara/services/image_download_service.dart';
 
 final supabase = Supabase.instance.client;
 
@@ -162,11 +163,30 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
     setState(() { _isAddingReply = true; });
 
     try {
-      await supabase.from('balasan_laporan').insert({
+      final insertedReply = await supabase.from('balasan_laporan').insert({
         'report_id': widget.reportId,
         'author_id': supabase.auth.currentUser!.id,
         'pesan': _replyController.text.trim(),
-      });
+      }).select().single();
+
+      // Panggil Edge Function untuk kirim notifikasi ke siswa
+      try {
+        
+        // Manual format untuk memastikan data clean
+        final cleanReplyData = {
+          'id': insertedReply['id'],
+          'report_id': insertedReply['report_id'],
+          'author_id': insertedReply['author_id'],
+          'pesan': insertedReply['pesan'],
+          'created_at': insertedReply['created_at'],
+        };
+        
+        await supabase.functions.invoke('send-reply-notification', body: {
+          'record': cleanReplyData
+        });
+      } catch (notifError) {
+        // Don't fail the whole process if notification fails
+      }
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -352,10 +372,11 @@ Widget _buildDetailRow(String title, String value) {
               actions: [
                 IconButton(
                   icon: const Icon(Icons.download),
-                  onPressed: () {
-                    // TODO: Implement download functionality if needed
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Fitur download akan segera tersedia')),
+                  onPressed: () async {
+                    await ImageDownloadService.downloadImage(
+                      context,
+                      url,
+                      customFileName: 'bukti_laporan_${DateTime.now().millisecondsSinceEpoch}.jpg',
                     );
                   },
                 ),

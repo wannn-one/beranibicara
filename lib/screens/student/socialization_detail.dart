@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:beranibicara/services/image_download_service.dart';
 
 class SocializationDetailScreen extends StatelessWidget {
   final Map<String, dynamic> content;
@@ -17,6 +18,18 @@ class SocializationDetailScreen extends StatelessWidget {
               backgroundColor: Colors.black,
               foregroundColor: Colors.white,
               title: const Text('Gambar Cover'),
+              actions: [
+                IconButton(
+                  icon: const Icon(Icons.download),
+                  onPressed: () async {
+                    await ImageDownloadService.downloadImage(
+                      context,
+                      imageUrl,
+                      customFileName: 'sosialisasi_${DateTime.now().millisecondsSinceEpoch}.jpg',
+                    );
+                  },
+                ),
+              ],
             ),
             body: Center(
               child: InteractiveViewer(

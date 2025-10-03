@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "1023505193070",
+    "project_id": "berani-bicara-app",
+    "storage_bucket": "berani-bicara-app.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1023505193070:android:b022d6cdefd4a4cbc4ee7f",
+        "android_client_info": {
+          "package_name": "com.example.beranibicara"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1023505193070-d0iimo46j426hnu6vp6ghui6qb3dlj7c.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.beranibicara",
+            "certificate_hash": "622bff737418e9cf01c8754ede993d6e2315e433"
+          }
+        },
+        {
+          "client_id": "1023505193070-05a62u21l0lpu3t29vrtmp1gnuqlhikc.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCYmbSuhOe6wT-MJ07FBObMqTVC0xw-gKg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1023505193070-05a62u21l0lpu3t29vrtmp1gnuqlhikc.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
