@@ -104,7 +104,7 @@ class _MadingKelasTeacherScreenState extends State<MadingKelasTeacherScreen> {
       });
       
     } catch (error) {
-      debugPrint('Error fetching cerita: $error');
+      // Error fetching cerita
     }
   }
 

@@ -7,9 +7,9 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:1023505193070:android:b022d6cdefd4a4cbc4ee7f",
+        "mobilesdk_app_id": "1:1023505193070:android:45e8b2fe15c9f864c4ee7f",
         "android_client_info": {
-          "package_name": "com.example.beranibicara"
+          "package_name": "com.beranibicara.app"
         }
       },
       "oauth_client": [
@@ -17,7 +17,7 @@
           "client_id": "1023505193070-d0iimo46j426hnu6vp6ghui6qb3dlj7c.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
-            "package_name": "com.example.beranibicara",
+            "package_name": "com.beranibicara.app",
             "certificate_hash": "622bff737418e9cf01c8754ede993d6e2315e433"
           }
         },

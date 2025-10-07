@@ -51,7 +51,7 @@ class _DetailCeritaScreenState extends State<DetailCeritaScreen> {
         _currentUserId = userId;
       });
     } catch (e) {
-      debugPrint('Error getting current user: $e');
+      // Error getting current user
     }
   }
 

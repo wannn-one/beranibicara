@@ -46,7 +46,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
         });
       }
     } catch (error) {
-      debugPrint('Error fetching user name: $error');
+      // Error fetching user name
     } finally {
       if (mounted) {
         setState(() {
@@ -84,7 +84,7 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
 
       return (response as List).map((item) => item as Map<String, dynamic>).toList();
     } catch (error) {
-      debugPrint('Error fetching socialization content: $error');
+      // Error fetching socialization content
       return [];
     }
   }

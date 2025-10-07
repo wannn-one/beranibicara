@@ -109,36 +109,42 @@ class _LoginScreenState extends State<LoginScreen> {
 
   // Fungsi Google Sign In bisa kita gunakan kembali
   Future<void> _signInWithGoogle() async {
-    // ... (kode _signInWithGoogle bisa disalin dari register_screen.dart, SAMA PERSIS)
     try {
-      final webClientId = dotenv.env['GOOGLE_CLIENT_ID']!;
+      final webClientId = dotenv.env['GOOGLE_CLIENT_ID'] ?? '1023505193070-05a62u21l0lpu3t29vrtmp1gnuqlhikc.apps.googleusercontent.com';
+      
       final GoogleSignIn googleSignIn = GoogleSignIn(serverClientId: webClientId);
+      
       final googleUser = await googleSignIn.signIn();
-      final googleAuth = await googleUser!.authentication;
+      
+      if (googleUser == null) {
+        return;
+      }
+      
+      final googleAuth = await googleUser.authentication;
+      
       final accessToken = googleAuth.accessToken;
       final idToken = googleAuth.idToken;
 
-      if (idToken == null) throw 'No ID token found!';
+      if (idToken == null) {
+        throw 'No ID token found from Google authentication!';
+      }
 
       await supabase.auth.signInWithIdToken(
         provider: OAuthProvider.google,
         idToken: idToken,
         accessToken: accessToken,
       );
-      if (mounted) {
-        Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (context) => const SplashScreen()),
-          (route) => false,
-        );
-      }
+      
+      // Navigation will be handled by auth listener in main.dart
     } catch (error) {
+      
       if (mounted) {
         showDialog(
           context: context,
           builder: (BuildContext context) {
             return AlertDialog(
               title: const Text('Error'),
-              content: const Text('Error login dengan Google'),
+              content: Text('Error login dengan Google: $error'),
               actions: [
                 TextButton(
                   onPressed: () => Navigator.of(context).pop(),

@@ -80,12 +80,14 @@ class _SplashScreenState extends State<SplashScreen> {
       } catch (error) {
         // Jika gagal mengambil data profil, anggap sesi tidak valid
         supabase.auth.signOut();
+        if (!mounted) return;
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(builder: (context) => const WelcomeScreen()),
         );
       }
     } else {
       // Jika tidak ada sesi (pengguna belum login), arahkan ke halaman welcome
+      if (!mounted) return;
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(builder: (context) => const WelcomeScreen()),
       );

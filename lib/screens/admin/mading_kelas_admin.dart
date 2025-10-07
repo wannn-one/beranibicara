@@ -108,7 +108,7 @@ class _MadingKelasAdminScreenState extends State<MadingKelasAdminScreen> {
       });
       
     } catch (error) {
-      debugPrint('Error fetching cerita: $error');
+      // Error fetching cerita
     }
   }
 

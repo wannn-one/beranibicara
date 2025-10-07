@@ -5,7 +5,6 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:beranibicara/screens/auth/complete_profile.dart';
 import 'package:beranibicara/screens/auth/email_verification.dart';
 
 final supabase = Supabase.instance.client;
@@ -131,18 +130,24 @@ class _RegisterScreenState extends State<RegisterScreen> {
     Future<void> _signUpWithGoogle() async {
     try {
       // 1. Dapatkan Web Client ID dari Google Cloud Console (kredensial Web)
-      // get from env
-      final webClientId = dotenv.env['GOOGLE_CLIENT_ID']!;
+      final webClientId = dotenv.env['GOOGLE_CLIENT_ID'] ?? '1023505193070-05a62u21l0lpu3t29vrtmp1gnuqlhikc.apps.googleusercontent.com';
 
       // 2. Minta Google Sign In
       final GoogleSignIn googleSignIn = GoogleSignIn(serverClientId: webClientId);
+      
       final googleUser = await googleSignIn.signIn();
-      final googleAuth = await googleUser!.authentication;
+      
+      if (googleUser == null) {
+        return;
+      }
+      
+      final googleAuth = await googleUser.authentication;
+      
       final accessToken = googleAuth.accessToken;
       final idToken = googleAuth.idToken;
 
       if (idToken == null) {
-        throw 'No ID token found!';
+        throw 'No ID token found from Google authentication!';
       }
 
       // 3. Panggil Supabase signInWithIdToken
@@ -151,13 +156,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
         idToken: idToken,
         accessToken: accessToken,
       );
-
-      if (mounted) {
-        Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (context) => const CompleteProfileScreen()),
-      (route) => false,
-      );
-      }
+      
+      // Navigation will be handled by auth listener in main.dart
 
     } on AuthException catch (error) {
       if (mounted) {
@@ -165,7 +165,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       }
     } catch (error) {
        if (mounted) {
-        debugPrint('Error: $error');
+        // Error handled by UI
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Terjadi error saat login dengan Google')));
       }
     }

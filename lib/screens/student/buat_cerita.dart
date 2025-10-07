@@ -69,7 +69,7 @@ class _BuatCeritaScreenState extends State<BuatCeritaScreen> {
       
       return imageUrl;
     } catch (e) {
-      debugPrint('Error uploading image: $e');
+      // Error uploading image
       return null;
     }
   }

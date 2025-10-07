@@ -82,14 +82,16 @@ class _DetailCeritaTeacherScreenState extends State<DetailCeritaTeacherScreen> {
     setState(() => _isSubmittingTanggapan = true);
 
     try {
-      supabase.from('tanggapan_cerita').insert({
+      await supabase.from('tanggapan_cerita').insert({
         'cerita_id': widget.ceritaId,
         'author_id': _currentUserId,
         'tanggapan': tanggapan,
       });
 
       _tanggapanController.clear();
-      FocusScope.of(context).unfocus();
+      if (mounted) {
+        FocusScope.of(context).unfocus();
+      }
       await _fetchCeritaDetail(); // Refresh to show new comment
     } catch (error) {
       if (mounted) {
