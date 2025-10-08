@@ -432,6 +432,17 @@ class _CreateContentScreenState extends State<CreateContentScreen> {
     try {
       final userId = supabase.auth.currentUser!.id;
       
+      // Verify user is admin before proceeding
+      final userProfile = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', userId)
+          .single();
+      
+      if (userProfile['role'] != 'tppk') {
+        throw Exception('Hanya admin TPPK yang dapat membuat konten sosialisasi');
+      }
+      
       // 1. Insert the content first
       final insertedContent = await supabase.from('socialization').insert({
         'author_id': userId,

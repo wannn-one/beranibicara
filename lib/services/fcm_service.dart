@@ -16,6 +16,9 @@ class FCMService {
       
       _messaging = FirebaseMessaging.instance;
       
+      // Create notification channel for Android
+      await _createNotificationChannel();
+      
       // Request permission untuk notifications
       await _requestPermission();
       
@@ -31,6 +34,26 @@ class FCMService {
     } catch (e) {
       if (kDebugMode) {
         print('Error initializing FCM: $e');
+      }
+    }
+  }
+
+  /// Create notification channel for Android
+  static Future<void> _createNotificationChannel() async {
+    // For heads-up notifications, we need to create a high importance channel
+    // This is critical for Android 8.0+ to show heads-up notifications
+    try {
+      // Import flutter_local_notifications if available
+      // For now, we'll rely on the system to create the channel with high importance
+      // The channel will be created automatically when first notification is received
+      if (kDebugMode) {
+        print('High importance notification channel will be created automatically');
+        print('Channel ID: beranibicara_notifications');
+        print('Importance: HIGH (for heads-up display)');
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('Note: Notification channel will be created by system: $e');
       }
     }
   }

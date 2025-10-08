@@ -106,12 +106,12 @@ class _BuatCeritaAdminScreenState extends State<BuatCeritaAdminScreen> {
         final timestamp = DateTime.now().millisecondsSinceEpoch;
         final fileName = 'cerita_$timestamp.jpg';
         
-        // final response = await supabase.storage
-        //     .from('cerita_images')
-        //     .upload(fileName, _selectedImage!);
+        await supabase.storage
+            .from('cerita-images')
+            .upload(fileName, _selectedImage!);
 
         imageUrl = supabase.storage
-            .from('cerita_images')
+            .from('cerita-images')
             .getPublicUrl(fileName);
       }
 

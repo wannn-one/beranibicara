@@ -260,6 +260,34 @@ serve(async (req) => {
               'report_id': newReport.id.toString(),
               'report_type': reportType,
               'is_anonymous': isAnonymous.toString(),
+            },
+            android: {
+              priority: "high",
+              notification: {
+                sound: "default",
+                channel_id: "beranibicara_notifications",
+                default_sound: true,
+                default_vibrate_timings: true,
+                default_light_settings: true,
+                visibility: "public"
+              }
+            },
+            apns: {
+              headers: {
+                "apns-priority": "10",
+                "apns-push-type": "alert"
+              },
+              payload: {
+                aps: {
+                  alert: {
+                    title: "📋 Laporan Baru Masuk",
+                    body: `"${reportType}" ${reporterInfo}`
+                  },
+                  sound: "default",
+                  badge: 1,
+                  "content-available": 1
+                }
+              }
             }
           }
         };

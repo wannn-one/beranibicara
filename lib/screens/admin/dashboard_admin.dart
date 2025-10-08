@@ -44,6 +44,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     });
 
     try {
+      
       final now = DateTime.now();
       final sevenDaysAgo = now.subtract(const Duration(days: 7));
 
@@ -66,6 +67,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       ]);
 
       if (mounted) {
+        
         setState(() {
           _totalLaporan = results[0] as int;
           _laporanBaru = results[1] as int;
@@ -83,6 +85,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           final dbRecentReports = (results[6] as List)
               .map((item) => item as Map<String, dynamic>)
               .toList();
+
 
           // Use real data from database
           _recentReports = dbRecentReports;

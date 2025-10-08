@@ -271,6 +271,34 @@ serve(async (req) => {
             data: {
               'screen': '/track-report',
               'report_id': newReply.report_id.toString(),
+            },
+            android: {
+              priority: "high",
+              notification: {
+                sound: "default",
+                channel_id: "beranibicara_notifications",
+                default_sound: true,
+                default_vibrate_timings: true,
+                default_light_settings: true,
+                visibility: "public"
+              }
+            },
+            apns: {
+              headers: {
+                "apns-priority": "10",
+                "apns-push-type": "alert"
+              },
+              payload: {
+                aps: {
+                  alert: {
+                    title: "🔔 Balasan Baru untuk Laporan Anda",
+                    body: "Tim TPPK telah memberikan balasan untuk salah satu laporan Anda."
+                  },
+                  sound: "default",
+                  badge: 1,
+                  "content-available": 1
+                }
+              }
             }
           }
         };

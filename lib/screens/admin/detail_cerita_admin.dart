@@ -215,18 +215,32 @@ class _DetailCeritaAdminScreenState extends State<DetailCeritaAdminScreen> {
                         style: const TextStyle(
                             fontWeight: FontWeight.bold, fontSize: 16),
                       ),
-                      Row(
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Icon(Icons.school, size: 14, color: Colors.grey[600]),
-                          const SizedBox(width: 4),
-                          Text(
-                            'Kelas $kelasName',
-                            style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                          Row(
+                            children: [
+                              Icon(Icons.school, size: 14, color: Colors.grey[600]),
+                              const SizedBox(width: 4),
+                              Text(
+                                'Kelas $kelasName',
+                                style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                              ),
+                            ],
                           ),
-                          const SizedBox(width: 8),
-                          Text(
-                            '• $formattedDate',
-                            style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                          const SizedBox(height: 2),
+                          Row(
+                            children: [
+                              Icon(Icons.schedule, size: 14, color: Colors.grey[600]),
+                              const SizedBox(width: 4),
+                              Flexible(
+                                child: Text(
+                                  formattedDate,
+                                  style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       ),
