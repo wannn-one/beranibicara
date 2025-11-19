@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:beranibicara/screens/teacher/teacher_report_detail.dart';
+import 'package:beranibicara/utils/datetime_utils.dart';
 
 class TeacherReportCard extends StatelessWidget {
   final Map<String, dynamic> laporan;
@@ -57,8 +57,7 @@ class TeacherReportCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final reportDate = DateTime.parse(laporan['created_at']);
-    final formattedDate = DateFormat('d MMM yyyy, HH:mm').format(reportDate);
+    final formattedDate = DateTimeUtils.formatUtcToIndonesian(laporan['created_at']);
     final status = laporan['status'] ?? 'baru';
     final isAnonymous = laporan['is_anonymous'] ?? false;
     final reporterName = isAnonymous 

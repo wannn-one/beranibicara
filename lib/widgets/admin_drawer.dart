@@ -3,6 +3,7 @@ import 'package:beranibicara/screens/admin/kelola_laporan.dart';
 import 'package:beranibicara/screens/admin/kelola_user.dart';
 import 'package:beranibicara/screens/admin/profile.dart';
 import 'package:beranibicara/screens/admin/kelola_konten.dart';
+import 'package:beranibicara/screens/admin/kelola_nisn.dart';
 import 'package:beranibicara/screens/admin/mading_kelas_admin.dart';
 import 'package:beranibicara/screens/splash.dart';
 import 'package:flutter/material.dart';
@@ -96,6 +97,15 @@ class AdminDrawer extends StatelessWidget {
             onTap: () {
               Navigator.pop(context);
               Navigator.pushReplacementNamed(context, ManageContentScreen.routeName);
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.badge), // NISN
+            title: const Text('Kelola NISN'),
+            selected: currentRoute == KelolaNISNScreen.routeName,
+            onTap: () {
+              Navigator.pop(context);
+              Navigator.pushReplacementNamed(context, KelolaNISNScreen.routeName);
             },
           ),
           ListTile(

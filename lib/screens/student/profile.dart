@@ -267,6 +267,13 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                             );
                           },
                         ),
+                        const Divider(height: 1),
+                        ListTile(
+                          leading: const Icon(Icons.delete_forever_outlined, color: Colors.red),
+                          title: const Text('Hapus Akun', style: TextStyle(color: Colors.red)),
+                          trailing: const Icon(Icons.chevron_right, color: Colors.red),
+                          onTap: _showDeleteAccountDialog,
+                        ),
                       ],
                     ),
                   ),
@@ -310,4 +317,53 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
             ),
     );
   }
-} 
+
+  void _showDeleteAccountDialog() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Hapus Akun'),
+          content: const Text(
+              'Apakah Anda yakin ingin mengajukan penghapusan akun? Tindakan ini akan mengirimkan permintaan ke admin untuk menghapus akun Anda secara permanen.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Batal'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                try {
+                  await supabase
+                      .from('profiles')
+                      .update({'status': 'deletion_requested'})
+                      .eq('id', _currentUser!.id);
+
+                  if (mounted && context.mounted) {
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                          content: Text(
+                              'Permintaan penghapusan akun telah dikirim.')),
+                    );
+                    _fetchUserProfile(); // Refresh data
+                  }
+                } catch (error) {
+                  if (mounted && context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                          content: Text(
+                              'Gagal mengirim permintaan: $error')),
+                    );
+                  }
+                }
+              },
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+              child: const Text('Ajukan Penghapusan'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}

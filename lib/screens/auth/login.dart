@@ -7,6 +7,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:beranibicara/screens/auth/register.dart';
 import 'package:beranibicara/screens/auth/forgot_password.dart';
 import 'package:beranibicara/screens/splash.dart';
+import 'package:beranibicara/utils/nisn_validator.dart';
 
 // Mengambil instance Supabase dari main.dart
 final supabase = Supabase.instance.client;
@@ -23,6 +24,16 @@ class _LoginScreenState extends State<LoginScreen> {
   final _passwordController = TextEditingController();
   bool _isPasswordObscured = true;
   bool _isLoading = false;
+  bool _isNISNLogin = false; // ✅ Add NISN login mode
+
+  // ✅ Auto-detect input type
+  void _onInputChanged(String value) {
+    if (value.length == 10 && RegExp(r'^\d+$').hasMatch(value)) {
+      setState(() => _isNISNLogin = true);
+    } else if (value.contains('@')) {
+      setState(() => _isNISNLogin = false);
+    }
+  }
 
   Future<void> _signIn() async {
     if (_emailController.text.isEmpty || _passwordController.text.isEmpty) {
@@ -31,7 +42,29 @@ class _LoginScreenState extends State<LoginScreen> {
         builder: (BuildContext context) {
           return AlertDialog(
             title: const Text('Peringatan'),
-            content: const Text('Email dan Password harus diisi'),
+            content: Text(_isNISNLogin 
+              ? 'NISN dan Password harus diisi' 
+              : 'Email dan Password harus diisi'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('OK'),
+              ),
+            ],
+          );
+        },
+      );
+      return;
+    }
+
+    // ✅ Validasi NISN format jika menggunakan NISN
+    if (_isNISNLogin && !NISNValidator.isValidFormat(_emailController.text)) {
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text('Error'),
+            content: const Text('Format NISN tidak valid. NISN harus 10 digit angka.'),
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(context).pop(),
@@ -49,11 +82,16 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     try {
-      // Panggil fungsi signInWithPassword dari Supabase
-      await supabase.auth.signInWithPassword(
-        email: _emailController.text.trim(),
-        password: _passwordController.text.trim(),
-      );
+      if (_isNISNLogin) {
+        // ✅ Login dengan NISN
+        await _signInWithNISN();
+      } else {
+        // ✅ Login dengan Email (existing logic)
+        await supabase.auth.signInWithPassword(
+          email: _emailController.text.trim(),
+          password: _passwordController.text.trim(),
+        );
+      }
 
       if (mounted) {
         // Jika berhasil, navigasi ke Dashboard dan hapus semua halaman sebelumnya
@@ -62,14 +100,16 @@ class _LoginScreenState extends State<LoginScreen> {
           (route) => false,
         );
       }
-    } on AuthException catch (error) {
+    } on AuthException {
       if (mounted) {
         showDialog(
           context: context,
           builder: (BuildContext context) {
             return AlertDialog(
               title: const Text('Error'),
-              content: Text('Login Gagal: ${error.message}'),
+              content: Text(_isNISNLogin 
+                ? 'NISN atau Password salah' 
+                : 'Email atau Password salah'),
               actions: [
                 TextButton(
                   onPressed: () => Navigator.of(context).pop(),
@@ -87,7 +127,7 @@ class _LoginScreenState extends State<LoginScreen> {
           builder: (BuildContext context) {
             return AlertDialog(
               title: const Text('Error'),
-              content: const Text('Terjadi error yang tidak terduga'),
+              content: Text('Terjadi error: $error'),
               actions: [
                 TextButton(
                   onPressed: () => Navigator.of(context).pop(),
@@ -107,12 +147,35 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
+  // ✅ Method untuk login dengan NISN
+  Future<void> _signInWithNISN() async {
+    // Cari user berdasarkan NISN
+    final response = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('nisn', _emailController.text.trim())
+        .single();
+
+    // Ambil email user dari auth.users
+    final userResponse = await supabase
+        .from('auth.users')
+        .select('email')
+        .eq('id', response['id'])
+        .single();
+
+    // Login dengan email yang ditemukan
+    await supabase.auth.signInWithPassword(
+      email: userResponse['email'],
+      password: _passwordController.text.trim(),
+    );
+  }
+
   // Fungsi Google Sign In bisa kita gunakan kembali
   Future<void> _signInWithGoogle() async {
     try {
-      final webClientId = dotenv.env['GOOGLE_CLIENT_ID'] ?? '1023505193070-05a62u21l0lpu3t29vrtmp1gnuqlhikc.apps.googleusercontent.com';
-      
-      final GoogleSignIn googleSignIn = GoogleSignIn(serverClientId: webClientId);
+      final androidClientId = dotenv.env['GOOGLE_CLIENT_ID'];
+
+      final GoogleSignIn googleSignIn = GoogleSignIn(clientId: androidClientId);
       
       final googleUser = await googleSignIn.signIn();
       
@@ -194,15 +257,19 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
             ),
             
-            const Text('Email', style: TextStyle(color: Colors.white, fontSize: 16)),
+            Text(_isNISNLogin ? 'NISN' : 'Email', style: const TextStyle(color: Colors.white, fontSize: 16)),
             const SizedBox(height: 8),
             TextFormField(
               controller: _emailController,
-              keyboardType: TextInputType.emailAddress,
+              keyboardType: _isNISNLogin ? TextInputType.number : TextInputType.emailAddress,
+              maxLength: _isNISNLogin ? 10 : null,
+              onChanged: _onInputChanged,
               decoration: InputDecoration(
                 filled: true,
                 fillColor: Colors.white.withValues(alpha: 0.9),
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                hintText: 'Masukkan email / NISN (10 digit)',
+                counterText: _isNISNLogin ? '' : null,
               ),
             ),
             const SizedBox(height: 16),
@@ -223,6 +290,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     });
                   },
                 ),
+                hintText: 'Masukkan password',
               ),
             ),
             const SizedBox(height: 16),

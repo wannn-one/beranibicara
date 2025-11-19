@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
@@ -11,24 +12,22 @@ class FCMService {
   /// Initialize Firebase dan FCM
   static Future<void> initialize() async {
     try {
-      // Initialize Firebase
+      // ✅ Initialize Firebase in background
       await Firebase.initializeApp();
       
       _messaging = FirebaseMessaging.instance;
       
-      // Create notification channel for Android
-      await _createNotificationChannel();
+      // ✅ Run heavy operations in parallel
+      await Future.wait([
+        _createNotificationChannel(),
+        _requestPermission(),
+        _setupHandlers(),
+      ]);
       
-      // Request permission untuk notifications
-      await _requestPermission();
+      // ✅ Get token in background (non-blocking)
+      unawaited(_getAndSaveToken());
       
-      // Setup handlers
-      await _setupHandlers();
-      
-      // Get dan save initial token
-      await _getAndSaveToken();
-      
-      // Listen for token refresh
+      // ✅ Listen for token refresh
       _messaging!.onTokenRefresh.listen(_saveTokenToDatabase);
       
     } catch (e) {

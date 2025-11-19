@@ -409,9 +409,120 @@ class _TeacherReportDetailScreenState extends State<TeacherReportDetailScreen> {
                           ),
                         ),
                       ],
+                      const SizedBox(height: 24),
+                      const Text(
+                        'Aksi Moderasi',
+                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.grey),
+                      ),
+                      const SizedBox(height: 8),
+                      OutlinedButton.icon(
+                        onPressed: _markAsFalseReport,
+                        style: OutlinedButton.styleFrom(
+                          minimumSize: const Size(double.infinity, 50),
+                          foregroundColor: Colors.amber.shade800,
+                          side: BorderSide(color: Colors.amber.shade800),
+                        ),
+                        icon: const Icon(Icons.flag),
+                        label: const Text('Tandai Sebagai Laporan Palsu'),
+                      ),
+                      const SizedBox(height: 8),
+                      OutlinedButton.icon(
+                        onPressed: _deleteReport,
+                        style: OutlinedButton.styleFrom(
+                          minimumSize: const Size(double.infinity, 50),
+                          foregroundColor: Colors.red,
+                          side: const BorderSide(color: Colors.red),
+                        ),
+                        icon: const Icon(Icons.delete_forever),
+                        label: const Text('Hapus Laporan (Tidak Pantas)'),
+                      ),
                     ],
                   ),
                 ),
     );
   }
-} 
+
+  Future<void> _markAsFalseReport() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Konfirmasi'),
+        content: const Text('Anda yakin ingin menandai laporan ini sebagai laporan palsu? Status akan diubah menjadi DITOLAK.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Batal'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Ya, Tandai'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && mounted) {
+      try {
+        await supabase
+            .from('reports')
+            .update({'status': 'ditolak'})
+            .eq('id', widget.reportId);
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Laporan telah ditandai sebagai palsu.')),
+          );
+          _fetchReportDetail();
+        }
+      } catch (error) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Gagal menandai laporan: $error')),
+          );
+        }
+      }
+    }
+  }
+
+  Future<void> _deleteReport() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Hapus Laporan'),
+        content: const Text('Anda yakin ingin menghapus laporan ini? Tindakan ini tidak dapat dibatalkan.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Batal'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            child: const Text('Hapus'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && mounted) {
+      try {
+        await supabase.rpc('delete_report_completely', params: {
+          'report_id_to_delete': widget.reportId,
+        });
+
+        if (mounted) {
+          Navigator.of(context).pop();
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Laporan berhasil dihapus.')),
+          );
+        }
+      } catch (error) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Gagal menghapus laporan: $error')),
+          );
+        }
+      }
+    }
+  }
+}

@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:beranibicara/widgets/admin_drawer.dart';
 import 'package:beranibicara/screens/admin/detail_laporan.dart';
+import 'package:beranibicara/utils/datetime_utils.dart';
 
 final supabase = Supabase.instance.client;
 
@@ -77,7 +78,7 @@ class _ManageReportsScreenState extends State<ManageReportsScreen> {
       
       // Filter by date range
       if (_selectedDateRange != 'Semua') {
-        final reportDate = DateTime.parse(report['created_at']);
+        final reportDate = DateTimeUtils.parseUtcToWib(report['created_at']);
         final now = DateTime.now();
         
         switch (_selectedDateRange) {
@@ -230,8 +231,10 @@ class _ManageReportsScreenState extends State<ManageReportsScreen> {
                       // Mengambil nama dari data relasi, tampilkan "Anonim" jika laporan anonim
                       final isAnonymous = report['is_anonymous'] ?? false;
                       final reporterName = isAnonymous ? 'Anonim' : (report['profiles']?['full_name'] ?? 'Unknown');
-                      final reportDate = DateTime.parse(report['created_at']);
-                      final formattedDate = DateFormat('d MMMM yyyy, HH:mm').format(reportDate);
+                      final formattedDate = DateTimeUtils.formatUtcToIndonesian(
+                        report['created_at'], 
+                        pattern: 'd MMMM yyyy, HH:mm'
+                      );
 
                       return Card(
                         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:beranibicara/widgets/admin_drawer.dart';
+import 'package:beranibicara/screens/admin/user_management_helper.dart';
 
 final supabase = Supabase.instance.client;
 
@@ -21,6 +22,7 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
   // Filter state variables
   String? _selectedRole;
   int? _selectedKelasId;
+  String? _selectedStatus;
 
   @override
   void initState() {
@@ -32,7 +34,7 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
     try {
       final response = await supabase
           .from('profiles')
-          .select('*, kelas:kelas_id(tingkat, jurusan)')
+          .select('*, kelas:kelas_id(tingkat, jurusan), blocked_by_profile:blocked_by(full_name)')
           .order('created_at', ascending: false);
       
       final realUsers = (response as List).map((item) => item as Map<String, dynamic>).toList();
@@ -69,6 +71,11 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
       // Filter by kelas_id (specific class)
       if (_selectedKelasId != null) {
         return user['kelas_id'] == _selectedKelasId;
+      }
+      
+      // Filter by status
+      if (_selectedStatus != null && user['status'] != _selectedStatus) {
+        return false;
       }
       
       return true;
@@ -110,72 +117,6 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
     return kelasList;
   }
 
-  void _showChangeRoleDialog(Map<String, dynamic> user) {
-    String selectedRole = user['role'];
-    
-    showDialog(
-      context: context,
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setDialogState) {
-            return AlertDialog(
-              title: Text('Ubah Peran untuk ${user['full_name']}'),
-              content: DropdownButton<String>(
-                value: selectedRole,
-                isExpanded: true,
-                items: ['siswa', 'guru', 'tppk'].map((String role) {
-                  return DropdownMenuItem<String>(
-                    value: role,
-                    child: Text(role.toUpperCase()),
-                  );
-                }).toList(),
-                onChanged: (String? newValue) {
-                  if (newValue != null) {
-                    setDialogState(() {
-                      selectedRole = newValue;
-                    });
-                  }
-                },
-              ),
-              actions: [
-                TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Batal')),
-                ElevatedButton(
-                  onPressed: () async {
-                    final navigator = Navigator.of(context);
-                    final scaffoldMessenger = ScaffoldMessenger.of(context);
-                    try {
-                      await supabase
-                          .from('profiles')
-                          .update({'role': selectedRole})
-                          .eq('id', user['id']);
-
-                      if (mounted) {
-                        navigator.pop();
-                        scaffoldMessenger.showSnackBar(
-                          const SnackBar(content: Text('Peran berhasil diperbarui!')),
-                        );
-                        setState(() {
-                          _usersFuture = _fetchUsers();
-                        });
-                      }
-                    } catch (error) {
-                      if (mounted) {
-                        navigator.pop();
-                        scaffoldMessenger.showSnackBar(
-                          SnackBar(content: Text('Gagal memperbarui peran: $error')),
-                        );
-                      }
-                    }
-                  },
-                  child: const Text('Simpan'),
-                ),
-              ],
-            );
-          },
-        );
-      },
-    );
-  }
 
   void _showWarningDialog(String message) {
     showDialog(
@@ -194,6 +135,7 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
       },
     );
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -246,20 +188,37 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
                         }
                         subtitleText += ' | Kelas: $userKelas';
                       }
+                      
+                      // Add status info
+                      String statusText = UserManagementHelper.getStatusText(user);
+                      subtitleText += ' | Status: $statusText';
 
                       return Card(
                         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        color: UserManagementHelper.getCardColor(user),
                         child: ListTile(
-                          leading: CircleAvatar(child: Text(user['full_name']?[0] ?? 'U')),
+                          leading: CircleAvatar(
+                            backgroundColor: UserManagementHelper.getStatusColor(user),
+                            child: Text(user['full_name']?[0] ?? 'U'),
+                          ),
                           title: Text(user['full_name'] ?? 'Nama tidak tersedia'),
                           subtitle: Text(subtitleText),
+                          trailing: UserManagementHelper.buildUserActions(context, user, () {
+                            setState(() {
+                              _usersFuture = _fetchUsers();
+                            });
+                          }),
                           onTap: () {
                             final loggedInUserId = supabase.auth.currentUser!.id;
 
                             if (loggedInUserId == user['id']) {
-                              _showWarningDialog('Anda tidak dapat mengubah peran diri sendiri!');
+                              _showWarningDialog('Anda tidak dapat mengubah diri sendiri!');
                             } else {
-                              _showChangeRoleDialog(user);
+                              UserManagementHelper.showUserManagementDialog(context, user, () {
+                                setState(() {
+                                  _usersFuture = _fetchUsers();
+                                });
+                              });
                             }
                           }
                         ),
@@ -383,6 +342,51 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
             ],
           ),
           const SizedBox(height: 12),
+          // Status Filter
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Status',
+                      style: TextStyle(fontSize: 12, color: Colors.grey),
+                    ),
+                    const SizedBox(height: 4),
+                    DropdownButtonFormField<String>(
+                      initialValue: _selectedStatus,
+                      decoration: const InputDecoration(
+                        contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        border: OutlineInputBorder(),
+                        isDense: true,
+                      ),
+                      hint: const Text('Semua Status'),
+                      items: [
+                        const DropdownMenuItem<String>(
+                          value: null,
+                          child: Text('Semua Status'),
+                        ),
+                        ...['aktif', 'diblokir', 'deletion_requested'].map((status) =>
+                          DropdownMenuItem<String>(
+                            value: status,
+                            child: Text(UserManagementHelper.getStatusText({'status': status})),
+                          ),
+                        ),
+                      ],
+                      onChanged: (value) {
+                        setState(() {
+                          _selectedStatus = value;
+                          _updateFilters();
+                        });
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
           // Filter Summary & Clear Button
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -391,14 +395,15 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
                 '${_filteredUsers.length} dari ${_allUsers.length} pengguna',
                 style: const TextStyle(fontSize: 12, color: Colors.grey),
               ),
-              if (_selectedRole != null || _selectedKelasId != null)
+              if (_selectedRole != null || _selectedKelasId != null || _selectedStatus != null)
                 TextButton.icon(
                   onPressed: () {
                     setState(() {
                       _selectedRole = null;
-                      _selectedKelasId = null;
-                      _updateFilters();
-                    });
+                          _selectedKelasId = null;
+                          _selectedStatus = null;
+                          _updateFilters();
+                        });
                   },
                   icon: const Icon(Icons.clear, size: 16),
                   label: const Text('Clear Filter'),

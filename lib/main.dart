@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:beranibicara/screens/admin/dashboard_admin.dart';
 import 'package:beranibicara/screens/admin/kelola_laporan.dart';
 import 'package:beranibicara/screens/admin/kelola_user.dart';
@@ -11,6 +12,7 @@ import 'package:beranibicara/screens/student/track_reports_list.dart';
 import 'package:beranibicara/screens/student/socialization_list.dart';
 import 'package:beranibicara/screens/student/mading_kelas.dart';
 import 'package:beranibicara/screens/admin/kelola_konten.dart';
+import 'package:beranibicara/screens/admin/kelola_nisn.dart';
 import 'package:beranibicara/screens/admin/mading_kelas_admin.dart';
 import 'package:beranibicara/screens/teacher/mading_kelas_teacher.dart';
 import 'package:beranibicara/screens/teacher/dashboard_teacher.dart';
@@ -22,26 +24,46 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:beranibicara/services/fcm_service.dart';
+import 'package:intl/date_symbol_data_local.dart';
 
 // Kunci global untuk mengakses Navigator
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  
+  // ✅ Load .env first (required)
   await dotenv.load(fileName: ".env");
-
+  
+  // ✅ Initialize Supabase (required)
   await Supabase.initialize(
     url: dotenv.env['SUPABASE_URL']!,
     anonKey: dotenv.env['SUPABASE_ANON_KEY']!,
   );
-
-  // Initialize FCM Service
-  await FCMService.initialize();
-
-  // Setup listener di sini, di tempat yang selalu aktif
+  
+  // ✅ Setup auth listener (required)
   _setupAuthListener();
-
+  
+  // ✅ Start app immediately
   runApp(const MyApp());
+  
+  // ✅ Initialize heavy services in background
+  _initializeBackgroundServices();
+}
+
+// ✅ Background initialization
+void _initializeBackgroundServices() async {
+  try {
+    // Initialize locale data in background
+    await initializeDateFormatting('id_ID', null);
+    
+    // Initialize FCM in background
+    await FCMService.initialize();
+  } catch (e) {
+    if (kDebugMode) {
+      print('Error initializing background services: $e');
+    }
+  }
 }
 
 void _setupAuthListener() {
@@ -96,6 +118,7 @@ class MyApp extends StatelessWidget {
         ManageReportsScreen.routeName: (context) => const ManageReportsScreen(),
         ManageUsersScreen.routeName: (context) => const ManageUsersScreen(),
         ManageContentScreen.routeName: (context) => const ManageContentScreen(),
+        KelolaNISNScreen.routeName: (context) => const KelolaNISNScreen(),
         AdminProfileScreen.routeName: (context) => const AdminProfileScreen(),
         StudentDashboardScreen.routeName: (context) => const StudentDashboardScreen(),
         StudentProfileScreen.routeName: (context) => const StudentProfileScreen(),

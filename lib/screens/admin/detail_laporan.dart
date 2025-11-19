@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:intl/intl.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:beranibicara/services/image_download_service.dart';
+import 'package:beranibicara/utils/datetime_utils.dart';
 
 final supabase = Supabase.instance.client;
 
@@ -245,8 +245,7 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
     itemCount: logs.length,
     itemBuilder: (context, index) {
       final log = logs[index];
-      final logDate = DateTime.parse(log['created_at']);
-      final formattedDate = DateFormat('d MMM yyyy, HH:mm').format(logDate);
+      final formattedDate = DateTimeUtils.formatUtcToIndonesian(log['created_at']);
 
       return Card(
         margin: const EdgeInsets.only(bottom: 8),
@@ -274,8 +273,7 @@ Widget _buildRepliesList(List replies) {
     itemCount: replies.length,
     itemBuilder: (context, index) {
       final reply = replies[index];
-      final replyDate = DateTime.parse(reply['created_at']);
-      final formattedDate = DateFormat('d MMM yyyy, HH:mm').format(replyDate);
+      final formattedDate = DateTimeUtils.formatUtcToIndonesian(reply['created_at']);
 
       return Card(
         margin: const EdgeInsets.only(bottom: 8),
@@ -449,6 +447,13 @@ Widget _buildDetailRow(String title, String value) {
         title: const Text('Detail Laporan'),
         backgroundColor: const Color(0xFF36A395),
         foregroundColor: Colors.white,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.delete_forever),
+            onPressed: _showDeleteReportDialog,
+            tooltip: 'Hapus Laporan',
+          ),
+        ],
       ),
       body: FutureBuilder<Map<String, dynamic>>(
         future: _reportFuture,
@@ -463,8 +468,10 @@ Widget _buildDetailRow(String title, String value) {
           final report = snapshot.data!;
           final isAnonymous = report['is_anonymous'] ?? false;
           final reporterName = isAnonymous ? 'Anonim' : (report['profiles']?['full_name'] ?? 'Unknown');
-          final reportDate = DateTime.parse(report['created_at']);
-          final formattedDate = DateFormat('EEEE, d MMMM yyyy, HH:mm').format(reportDate);
+          final formattedDate = DateTimeUtils.formatUtcToIndonesian(
+            report['created_at'], 
+            pattern: 'EEEE, d MMMM yyyy, HH:mm'
+          );
           final evidenceList = report['evidence'] as List;
           
           // Get class information if available
@@ -608,12 +615,130 @@ Widget _buildDetailRow(String title, String value) {
                     foregroundColor: Colors.white,
                   ),
                   child: const Text('Simpan Perubahan Status'),
-                )
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  'Aksi Moderasi Lainnya',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.grey),
+                ),
+                const SizedBox(height: 8),
+                OutlinedButton.icon(
+                  onPressed: _markAsFalseReport,
+                  style: OutlinedButton.styleFrom(
+                    minimumSize: const Size(double.infinity, 50),
+                    foregroundColor: Colors.amber.shade800,
+                    side: BorderSide(color: Colors.amber.shade800),
+                  ),
+                  icon: const Icon(Icons.flag),
+                  label: const Text('Tandai Sebagai Laporan Palsu'),
+                ),
               ],
             ),
           );
         },
       ),
     );
+  }
+
+  void _showDeleteReportDialog() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Hapus Laporan'),
+          content: const Text(
+              'Apakah Anda yakin ingin menghapus laporan ini? Tindakan ini tidak dapat dibatalkan dan akan menghapus semua data terkait, termasuk bukti dan log penanganan.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Batal'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                try {
+                  await supabase.rpc('delete_report_completely', params: {
+                    'report_id_to_delete': widget.reportId,
+                  });
+
+                  if (mounted && context.mounted) {
+                    Navigator.pop(context); // Close the dialog
+                    Navigator.pop(context, true); // Go back to the previous screen
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                          content: Text('Laporan berhasil dihapus.')),
+                    );
+                  }
+                } catch (error) {
+                  if (mounted && context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                          content: Text(
+                              'Gagal menghapus laporan: $error')),
+                    );
+                  }
+                }
+              },
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+              child: const Text('Hapus'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _markAsFalseReport() async {
+    // Show confirmation dialog
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Konfirmasi'),
+        content: const Text('Anda yakin ingin menandai laporan ini sebagai laporan palsu? Status akan diubah menjadi DITOLAK.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Batal'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Ya, Tandai'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && mounted) {
+      try {
+        // 1. Add a log entry
+        await supabase.from('log_penanganan').insert({
+          'report_id': widget.reportId,
+          'author_id': supabase.auth.currentUser!.id,
+          'catatan': 'Laporan ditandai sebagai laporan palsu oleh admin.',
+          'tahapan': 'lainnya',
+        });
+
+        // 2. Update the status to 'ditolak'
+        await supabase
+            .from('reports')
+            .update({'status': 'ditolak'})
+            .eq('id', widget.reportId);
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Laporan telah ditandai sebagai palsu.')),
+          );
+          // Refresh the details to show the new status and log
+          setState(() {
+            _reportFuture = _fetchReportDetails();
+          });
+        }
+      } catch (error) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Gagal menandai laporan: $error')),
+          );
+        }
+      }
+    }
   }
 }

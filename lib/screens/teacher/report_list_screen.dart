@@ -80,17 +80,25 @@ class _TeacherReportListScreenState extends State<TeacherReportListScreen> {
           .toList();
 
       // Get all reports from students in the class
+      // Gunakan query yang sesuai dengan RLS policy untuk guru
       List<Map<String, dynamic>> reports = [];
-      if (siswaIds.isNotEmpty) {
+      try {
         final laporanResponse = await supabase
             .from('reports')
             .select('*, profiles(full_name)')
-            .inFilter('reporter_id', siswaIds)
             .order('created_at', ascending: false);
 
-        reports = (laporanResponse as List)
+        final allReports = (laporanResponse as List)
             .map((item) => item as Map<String, dynamic>)
             .toList();
+
+        // Filter laporan yang reporter_id-nya ada di siswaIds
+        reports = allReports
+            .where((report) => siswaIds.contains(report['reporter_id']))
+            .toList();
+      } catch (error) {
+        // print('Error fetching reports for teacher: $error');
+        reports = [];
       }
 
       setState(() {

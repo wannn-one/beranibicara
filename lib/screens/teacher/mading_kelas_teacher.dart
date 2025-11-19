@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:beranibicara/widgets/teacher_drawer.dart';
 import 'package:beranibicara/screens/teacher/detail_cerita_teacher.dart';
+import 'package:beranibicara/utils/datetime_utils.dart';
 
 final supabase = Supabase.instance.client;
 
@@ -242,8 +243,7 @@ class _MadingKelasTeacherScreenState extends State<MadingKelasTeacherScreen> {
     final authorName = cerita['author']?['full_name'] ?? 'Unknown';
     final kelasInfo = cerita['kelas'];
     final kelasName = '${kelasInfo['tingkat']}${kelasInfo['jurusan']}';
-    final createdAt = DateTime.parse(cerita['created_at']);
-    final timeAgo = _getTimeAgo(createdAt);
+    final timeAgo = DateTimeUtils.getTimeAgo(cerita['created_at']);
     final tanggapanCount = cerita['tanggapan_count']?[0]?['count'] ?? 0;
     final hasImage = cerita['gambar_url'] != null;
 
@@ -398,18 +398,4 @@ class _MadingKelasTeacherScreenState extends State<MadingKelasTeacherScreen> {
     );
   }
 
-  String _getTimeAgo(DateTime dateTime) {
-    final now = DateTime.now();
-    final difference = now.difference(dateTime);
-    
-    if (difference.inDays > 0) {
-      return '${difference.inDays} hari lalu';
-    } else if (difference.inHours > 0) {
-      return '${difference.inHours} jam lalu';
-    } else if (difference.inMinutes > 0) {
-      return '${difference.inMinutes} menit lalu';
-    } else {
-      return 'Baru saja';
-    }
-  }
 }

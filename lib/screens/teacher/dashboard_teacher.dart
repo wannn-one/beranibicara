@@ -64,21 +64,29 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
       // Ambil daftar ID siswa untuk query laporan
       final siswaIds = daftarSiswa.map((siswa) => siswa['id']).toList();
 
-      // d. Ambil 3 laporan terbaru dari siswa-siswa di kelas (termasuk anonim untuk tracking internal)
+      // d. Ambil laporan terbaru dari siswa-siswa di kelas
+      // Gunakan query yang sesuai dengan RLS policy untuk guru
       List<Map<String, dynamic>> daftarLaporan = [];
-      if (siswaIds.isNotEmpty) {
+      try {
         final laporanResponse = await supabase
             .from('reports')
             .select('*, profiles(full_name)')
-            .inFilter('reporter_id', siswaIds)
-            // Tampilkan semua status seperti di admin, bukan hanya aktif
-            // .inFilter('status', ['baru', 'diproses'])  // Comment out filter ini
             .order('created_at', ascending: false)
-            .limit(3);
+            .limit(10); // Ambil lebih banyak dulu, nanti filter di client
 
-        daftarLaporan = (laporanResponse as List)
+        final allReports = (laporanResponse as List)
             .map((item) => item as Map<String, dynamic>)
             .toList();
+
+        // Filter laporan yang reporter_id-nya ada di siswaIds
+        daftarLaporan = allReports
+            .where((report) => siswaIds.contains(report['reporter_id']))
+            .take(3)
+            .toList();
+      } catch (error) {
+        // print('Error fetching reports: $error');
+        // Jika RLS memblokir, coba query alternatif
+        daftarLaporan = [];
       }
 
       // e. Kembalikan data dalam bentuk Map

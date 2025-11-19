@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:intl/intl.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:beranibicara/services/image_download_service.dart';
+import 'package:beranibicara/utils/datetime_utils.dart';
 
 final supabase = Supabase.instance.client;
 
@@ -260,8 +260,7 @@ class _TrackingReportScreenState extends State<TrackingReportScreen> {
 
     return Column(
       children: replies.map((reply) {
-        final replyDate = DateTime.parse(reply['created_at']);
-        final formattedDate = DateFormat('d MMM yyyy, HH:mm').format(replyDate);
+        final formattedDate = DateTimeUtils.formatUtcToIndonesian(reply['created_at']);
         final authorName = reply['author']['full_name'] ?? 'Tim TPPK';
 
         return Card(
@@ -340,8 +339,10 @@ class _TrackingReportScreenState extends State<TrackingReportScreen> {
           final report = snapshot.data!;
           final status = report['status'];
           final currentStep = _getStatusIndex(status);
-          final reportDate = DateTime.parse(report['created_at']);
-          final formattedDate = DateFormat('EEEE, d MMMM yyyy').format(reportDate);
+          final formattedDate = DateTimeUtils.formatUtcToIndonesian(
+            report['created_at'], 
+            pattern: 'EEEE, d MMMM yyyy'
+          );
           final replies = report['replies'] as List;
 
           return SingleChildScrollView(
