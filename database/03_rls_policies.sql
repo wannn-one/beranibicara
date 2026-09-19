@@ -53,7 +53,15 @@ ON public.reports FOR SELECT TO authenticated USING (get_my_role() = 'tppk');
 
 DROP POLICY IF EXISTS "Allow TPPK members to update all reports" ON public.reports;
 CREATE POLICY "Allow TPPK members to update all reports"
-ON public.reports FOR UPDATE TO authenticated USING (get_my_role() = 'tppk');
+ON public.reports FOR UPDATE TO authenticated
+USING (get_my_role() IN ('tppk', 'admin'))
+WITH CHECK (get_my_role() IN ('tppk', 'admin'));
+
+DROP POLICY IF EXISTS "Allow reporters to update own reports" ON public.reports;
+CREATE POLICY "Allow reporters to update own reports"
+ON public.reports FOR UPDATE TO authenticated
+USING (auth.uid() = reporter_id)
+WITH CHECK (auth.uid() = reporter_id);
 
 
 -- -----------------------------------------------------------------
@@ -101,35 +109,9 @@ ON public.socialization FOR DELETE TO authenticated USING (get_my_role() = 'tppk
 
 
 -- -----------------------------------------------------------------
--- 6. Kebijakan untuk Tabel 'notifications'
+-- 6. Kebijakan untuk Tabel 'kelas'
 -- -----------------------------------------------------------------
 
-DROP POLICY IF EXISTS "Allow users to view their own notification tokens" ON public.notifications;
-CREATE POLICY "Allow users to view their own notification tokens"
-ON public.notifications FOR SELECT TO authenticated USING (auth.uid() = user_id);
-
-DROP POLICY IF EXISTS "Allow users to create their own notification tokens" ON public.notifications;
-CREATE POLICY "Allow users to create their own notification tokens"
-ON public.notifications FOR INSERT TO authenticated WITH CHECK (auth.uid() = user_id);
-
-DROP POLICY IF EXISTS "Allow users to delete their own notification tokens" ON public.notifications;
-CREATE POLICY "Allow users to delete their own notification tokens"
-ON public.notifications FOR DELETE TO authenticated USING (auth.uid() = user_id);
-
-DROP POLICY IF EXISTS "Allow authenticated users to view classes" ON public.kelas;
-CREATE POLICY "Allow authenticated users to view classes"
-ON public.kelas FOR SELECT TO authenticated USING (true);
-
-DROP POLICY IF EXISTS "Allow TPPK members to manage classes" ON public.kelas;
-CREATE POLICY "Allow TPPK members to manage classes"
-ON public.kelas FOR ALL -- 'ALL' mencakup INSERT, UPDATE, DELETE
-TO authenticated
-USING (get_my_role() = 'tppk')
-WITH CHECK (get_my_role() = 'tppk');
-
--- -----------------------------------------------------------------
--- 7. Kebijakan untuk Tabel 'kelas' (BARU)
--- -----------------------------------------------------------------
 DROP POLICY IF EXISTS "Allow authenticated users to view classes" ON public.kelas;
 CREATE POLICY "Allow authenticated users to view classes"
 ON public.kelas FOR SELECT TO authenticated USING (true);
@@ -143,4 +125,31 @@ WITH CHECK (get_my_role() = 'tppk');
 
 -- =================================================================
 -- KONFIGURASI KEAMANAN SELESAI
+-- 
+-- NOTE: Additional RLS policies for new tables are in 12_optimize_rls.sql:
+-- - log_penanganan
+-- - balasan_laporan
+-- - cerita_kelas
+-- - tanggapan_cerita
+-- - device_tokens (replaces old 'notifications' table)
+-- - notification_history
+-- - audit_log
+-- - nisn_registry
+-- - user_deletion_log
 -- =================================================================
+
+CREATE POLICY "Allow homeroom teachers to view their students' reports"
+ON public.reports FOR SELECT TO authenticated USING (
+  EXISTS (
+    SELECT 1 
+    FROM public.profiles AS reporter
+    JOIN public.kelas AS k ON reporter.kelas_id = k.id
+    WHERE reporter.id = reports.reporter_id
+    AND k.wali_kelas_id = auth.uid()
+  )
+);
+
+CREATE POLICY "Allow admin to view all reports"
+ON public.reports FOR SELECT TO authenticated USING (
+  get_my_role() = 'admin'
+);
