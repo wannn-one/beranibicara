@@ -3,12 +3,19 @@ CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER
 LANGUAGE plpgsql
 SECURITY DEFINER
--- Baris ini adalah perbaikannya:
 SET search_path = public
 AS $$
 BEGIN
   INSERT INTO public.profiles (id, full_name, role)
-  VALUES (new.id, new.raw_user_meta_data->>'full_name', 'siswa');
+  VALUES (
+    new.id,
+    new.raw_user_meta_data->>'full_name',
+    CASE
+      WHEN lower(coalesce(new.raw_user_meta_data->>'role', 'siswa')) = 'guru'
+        THEN 'guru'::user_role
+      ELSE 'siswa'::user_role
+    END
+  );
   RETURN new;
 END;
 $$;
