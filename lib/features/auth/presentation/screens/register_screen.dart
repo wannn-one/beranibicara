@@ -226,9 +226,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               obscureText: _isPasswordObscured,
               suffixIcon: IconButton(
                 icon: Icon(
-                  _isPasswordObscured
-                      ? Icons.visibility_off
-                      : Icons.visibility,
+                  _isPasswordObscured ? Icons.visibility_off : Icons.visibility,
                 ),
                 onPressed: () {
                   setState(() {
@@ -249,19 +247,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
             ),
             if (_selectedRole == UserRole.siswa) ...[
               const SizedBox(height: 16),
-              Theme(
-                data: Theme.of(context).copyWith(
-                  inputDecorationTheme: const InputDecorationTheme(
-                    filled: true,
-                    fillColor: Colors.white,
-                  ),
-                ),
-                child: NisnTextField(
-                  controller: _nisnController,
-                  isVerifying: authNotifier.isNisnVerifying,
-                  isVerified: nisn.isEmpty ? null : nisnVerified,
-                  onVerifyPressed: _verifyNisn,
-                ),
+              NisnTextField(
+                controller: _nisnController,
+                isVerifying: authNotifier.isNisnVerifying,
+                isVerified: nisn.isEmpty ? null : nisnVerified,
+                onVerifyPressed: _verifyNisn,
               ),
             ],
             const SizedBox(height: 20),

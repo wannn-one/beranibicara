@@ -171,6 +171,12 @@ class AppTheme {
           color: AppColors.textSecondary,
           fontWeight: FontWeight.w500,
         ),
+        floatingLabelStyle: const TextStyle(
+          fontFamily: 'LeagueSpartan',
+          color: AppColors.black,
+          fontWeight: FontWeight.w600,
+          backgroundColor: AppColors.background,
+        ),
         errorStyle: const TextStyle(
           fontFamily: 'LeagueSpartan',
           color: AppColors.error,

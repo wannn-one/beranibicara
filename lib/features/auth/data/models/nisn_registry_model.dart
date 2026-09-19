@@ -2,7 +2,6 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:beranibicara/features/auth/domain/entities/nisn_registry.dart';
 
 part 'nisn_registry_model.freezed.dart';
-part 'nisn_registry_model.g.dart';
 
 /// NISN Registry Data Model with Freezed
 @freezed
@@ -21,8 +20,20 @@ class NisnRegistryModel with _$NisnRegistryModel {
   }) = _NisnRegistryModel;
 
   /// From JSON (from Supabase)
-  factory NisnRegistryModel.fromJson(Map<String, dynamic> json) =>
-      _$NisnRegistryModelFromJson(json);
+  factory NisnRegistryModel.fromJson(Map<String, dynamic> json) {
+    return NisnRegistryModel(
+      nisn: json['nisn'] as String,
+      namaSiswa: json['nama_siswa'] as String,
+      tingkat: (json['tingkat'] as num?)?.toInt(),
+      jurusan: json['jurusan'] as String?,
+      isRegistered: json['is_registered'] as bool? ?? false,
+      userId: json['user_id'] as String?,
+      createdAt: DateTime.parse(json['created_at'] as String),
+      registeredAt: json['registered_at'] == null
+          ? null
+          : DateTime.parse(json['registered_at'] as String),
+    );
+  }
 
   /// Convert to domain entity
   NisnRegistry toEntity() {
