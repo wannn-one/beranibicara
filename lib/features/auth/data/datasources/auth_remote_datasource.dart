@@ -213,17 +213,25 @@ class AuthRemoteDataSource {
   /// Verify NISN against registry
   Future<NisnRegistryModel> verifyNisn(String nisn) async {
     try {
-      final response = await supabaseClient
-          .from('nisn_registry')
-          .select()
-          .eq('nisn', nisn)
-          .maybeSingle();
+      final response = await supabaseClient.rpc(
+        'lookup_nisn',
+        params: {'p_nisn': nisn},
+      );
 
-      if (response == null) {
+      Map<String, dynamic>? row;
+      if (response is List && response.isNotEmpty) {
+        row = Map<String, dynamic>.from(response.first as Map);
+      } else if (response is Map<String, dynamic>) {
+        row = response;
+      } else if (response is Map) {
+        row = Map<String, dynamic>.from(response);
+      }
+
+      if (row == null) {
         throw NisnNotFoundException(message: 'NISN not found in registry');
       }
 
-      return NisnRegistryModel.fromJson(response);
+      return NisnRegistryModel.fromJson(row);
     } catch (e) {
       if (e is NisnNotFoundException) rethrow;
       throw ServerException(message: 'NISN verification failed: $e');

@@ -41,26 +41,52 @@ class NisnTextField extends StatelessWidget {
                   hintText: AppStrings.nisnHint,
                   errorText: errorText,
                   counterText: '',
+                  filled: true,
+                  fillColor: AppColors.white,
                   prefixIcon: const Icon(Icons.badge),
                   suffixIcon: isVerified != null
                       ? Icon(
                           isVerified! ? Icons.check_circle : Icons.error,
-                          color: isVerified! ? AppColors.success : AppColors.error,
+                          color: isVerified!
+                              ? AppColors.success
+                              : AppColors.error,
                         )
                       : null,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: BorderSide.none,
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: BorderSide.none,
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: const BorderSide(
+                      color: AppColors.primaryDark,
+                      width: 1.5,
+                    ),
+                  ),
                 ),
               ),
             ),
             if (onVerifyPressed != null) ...[
               const SizedBox(width: 8),
               ElevatedButton(
-                onPressed: (enabled && !isVerifying && controller.text.length == 10)
+                onPressed:
+                    (enabled && !isVerifying && controller.text.length == 10)
                     ? onVerifyPressed
                     : null,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  foregroundColor: AppColors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  backgroundColor: AppColors.secondary,
+                  foregroundColor: AppColors.textPrimary,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 18,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
                 ),
                 child: isVerifying
                     ? const SizedBox(
@@ -81,10 +107,7 @@ class NisnTextField extends StatelessWidget {
             padding: const EdgeInsets.only(top: 4),
             child: Text(
               AppStrings.nisnVerifying,
-              style: TextStyle(
-                fontSize: 12,
-                color: AppColors.info,
-              ),
+              style: TextStyle(fontSize: 12, color: AppColors.info),
             ),
           ),
         if (isVerified == true)

@@ -26,7 +26,7 @@ class CustomButton extends StatelessWidget {
       onPressed: isLoading ? null : onPressed,
       style: ElevatedButton.styleFrom(
         backgroundColor: backgroundColor ?? AppColors.secondary,
-        foregroundColor: textColor ?? AppColors.white,
+        foregroundColor: textColor ?? AppColors.textPrimary,
         minimumSize: const Size(double.infinity, 56),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
       ),
@@ -40,27 +40,24 @@ class CustomButton extends StatelessWidget {
               ),
             )
           : icon != null
-              ? Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(icon, size: 20),
-                    const SizedBox(width: 8),
-                    Text(
-                      text,
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                )
-              : Text(
+          ? Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(icon, size: 20),
+                const SizedBox(width: 8),
+                Text(
                   text,
                   style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
+              ],
+            )
+          : Text(
+              text,
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
     );
   }
 }

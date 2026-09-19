@@ -14,10 +14,6 @@ T _$identity<T>(T value) => value;
 final _privateConstructorUsedError = UnsupportedError(
     'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#adding-getters-and-methods-to-our-models');
 
-NisnRegistryModel _$NisnRegistryModelFromJson(Map<String, dynamic> json) {
-  return _NisnRegistryModel.fromJson(json);
-}
-
 /// @nodoc
 mixin _$NisnRegistryModel {
   String get nisn => throw _privateConstructorUsedError;
@@ -29,7 +25,6 @@ mixin _$NisnRegistryModel {
   DateTime get createdAt => throw _privateConstructorUsedError;
   DateTime? get registeredAt => throw _privateConstructorUsedError;
 
-  Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
   @JsonKey(ignore: true)
   $NisnRegistryModelCopyWith<NisnRegistryModel> get copyWith =>
       throw _privateConstructorUsedError;
@@ -188,7 +183,7 @@ class __$$NisnRegistryModelImplCopyWithImpl<$Res>
 }
 
 /// @nodoc
-@JsonSerializable()
+
 class _$NisnRegistryModelImpl extends _NisnRegistryModel {
   const _$NisnRegistryModelImpl(
       {required this.nisn,
@@ -200,9 +195,6 @@ class _$NisnRegistryModelImpl extends _NisnRegistryModel {
       required this.createdAt,
       this.registeredAt})
       : super._();
-
-  factory _$NisnRegistryModelImpl.fromJson(Map<String, dynamic> json) =>
-      _$$NisnRegistryModelImplFromJson(json);
 
   @override
   final String nisn;
@@ -246,7 +238,6 @@ class _$NisnRegistryModelImpl extends _NisnRegistryModel {
                 other.registeredAt == registeredAt));
   }
 
-  @JsonKey(ignore: true)
   @override
   int get hashCode => Object.hash(runtimeType, nisn, namaSiswa, tingkat,
       jurusan, isRegistered, userId, createdAt, registeredAt);
@@ -257,13 +248,6 @@ class _$NisnRegistryModelImpl extends _NisnRegistryModel {
   _$$NisnRegistryModelImplCopyWith<_$NisnRegistryModelImpl> get copyWith =>
       __$$NisnRegistryModelImplCopyWithImpl<_$NisnRegistryModelImpl>(
           this, _$identity);
-
-  @override
-  Map<String, dynamic> toJson() {
-    return _$$NisnRegistryModelImplToJson(
-      this,
-    );
-  }
 }
 
 abstract class _NisnRegistryModel extends NisnRegistryModel {
@@ -277,9 +261,6 @@ abstract class _NisnRegistryModel extends NisnRegistryModel {
       required final DateTime createdAt,
       final DateTime? registeredAt}) = _$NisnRegistryModelImpl;
   const _NisnRegistryModel._() : super._();
-
-  factory _NisnRegistryModel.fromJson(Map<String, dynamic> json) =
-      _$NisnRegistryModelImpl.fromJson;
 
   @override
   String get nisn;
