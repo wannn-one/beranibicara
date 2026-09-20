@@ -1,63 +1,63 @@
-# Berani Bicara App 🚀
+# Berani Bicara
 
-Aplikasi mobile lintas platform (Android & iOS) yang dibangun dengan Flutter untuk membantu pencegahan dan penanganan kasus perundungan (bullying) di lingkungan sekolah terkhusus SDN Kaliasin 1 Surabaya. Proyek ini bertujuan untuk memberdayakan siswa agar berani bicara dan menyediakan kanal yang aman bagi mereka untuk melapor kepada tim TPPK sekolah.
+Aplikasi Flutter (Android & iOS) untuk pencegahan dan penanganan perundungan di sekolah, dengan klien perdana **SDN Kaliasin 1 Surabaya**. Siswa dapat melapor secara aman; guru (wali kelas), Tim Penanganan dan Pencegahan Kekerasan (TPPK), dan admin mengelola laporan, sosialisasi, dan cerita kelas.
 
-## ✨ Fitur Utama
+Versi aplikasi: **2.0.0+7** (`pubspec.yaml`).
 
-* **Autentikasi Aman:** Pendaftaran dan Login menggunakan Email/Password dan Google Sign-In.
-* **Sistem Peran Pengguna:** Alur yang berbeda untuk Siswa, Guru (Wali Kelas), dan Admin (TPPK).
-* **Pelengkapan Profil:** Alur onboarding bagi siswa baru untuk melengkapi data diri, termasuk pemilihan kelas.
-* **Dashboard Sesuai Peran:** Tampilan dashboard yang disesuaikan dengan hak akses setiap peran pengguna.
-* **(Dalam Pengembangan) Pelaporan Insiden:** Form untuk melaporkan kejadian perundungan secara detail.
-* **(Dalam Pengembangan) Pelacakan Status Laporan:** Siswa dapat memantau status laporan yang mereka kirimkan.
-* **(Dalam Pengembangan) Konten Edukasi:** Halaman berisi materi sosialisasi dan edukasi dari tim TPPK.
+## Fitur
 
-## 🛠️ Teknologi yang Digunakan
+- **Auth:** email/password, Google Sign-In, reset password, verifikasi NISN (siswa), syarat & privasi
+- **Peran:** siswa, guru (wali kelas), TPPK, admin — dashboard dan hak akses berbeda
+- **Laporan:** buat/edit (status Baru), lampiran bukti, anonim, status, chat balasan TPPK, log penanganan
+- **Sosialisasi:** materi edukasi dari TPPK
+- **Cerita kelas:** untuk wali kelas dan siswa di kelasnya
+- **Notifikasi:** in-app dan push (setup terpisah, tidak didokumentasikan di sini)
+- **Admin:** pengguna, kelas, statistik, pengaturan (versi, tautan legal, cache)
 
-* **Frontend:** Flutter
-* **Backend & Database:** Supabase
-    * **Authentication:** Supabase GoTrue
-    * **Database:** PostgreSQL
-    * **Security:** Row Level Security (RLS)
-* **Bahasa:** Dart, SQL
+## Teknologi
 
-## 🚀 Memulai (Getting Started)
+| Bagian | Stack |
+| --- | --- |
+| App | Flutter, Dart, Provider, go_router |
+| Backend | Supabase (Auth, PostgreSQL + RLS, Storage, Realtime) |
+| Push | Firebase Cloud Messaging |
+| Cache lokal | Hive |
 
-Untuk menjalankan proyek ini secara lokal, ikuti langkah-langkah berikut:
+Struktur kode: **Clean Architecture** per fitur di `lib/features/` (data / domain / presentation), `lib/core/` dan `lib/shared/`.
 
-1.  **Clone repository ini:**
-    ```sh
-    git clone https://github.com/wannn-one/beranibicara.git
-    cd beranibicara
-    ```
+## Menjalankan lokal
 
-2.  **Install dependencies Flutter:**
-    ```sh
-    flutter pub get
-    ```
+```sh
+git clone https://github.com/wannn-one/beranibicara.git
+cd beranibicara
+flutter pub get
+```
 
-3.  **Setup Backend Supabase:**
-    * Buat proyek baru di [Supabase](https://supabase.com/).
-    * Jalankan skrip SQL yang ada di folder `/database` (Anda bisa buat folder ini) untuk membuat tabel dan RLS policies.
-    * Isi tabel `kelas` dengan data awal menggunakan skrip seeder.
+Salin `.env.example` menjadi `.env` (file ini tidak di-commit):
 
-4.  **Konfigurasi Environment Variables:**
-    * Buat file `.env` di direktori utama proyek.
-    * Isi file tersebut dengan kredensial Supabase dan Google Client ID Anda:
-        ```
-        SUPABASE_URL=URL_PROYEK_ANDA
-        SUPABASE_ANON_KEY=ANON_KEY_ANDA
-        GOOGLE_CLIENT_ID=WEB_CLIENT_ID_ANDA
-        ```
+```
+SUPABASE_URL=
+SUPABASE_ANON_KEY=
+GOOGLE_CLIENT_ID=
+TERMS_OF_USE_URL=https://beranibicara.site/terms-of-service
+PRIVACY_POLICY_URL=https://beranibicara.site/privacy-policy
+```
 
-5.  **Jalankan aplikasi:**
-    ```sh
-    flutter run
-    ```
+Untuk Android, siapkan `android/app/google-services.json` (gitignored). Contoh keystore: `android/key.properties.example`.
 
-## 🎯 Status Proyek
+```sh
+flutter run
+```
 
-Proyek ini sedang dalam tahap pengembangan aktif dengan target penyelesaian pada **Oktober 2025**.
+Deep link auth: `com.beranibicara.app://callback`.
+
+Skema database, RLS, dan seed **tidak dipublikasikan** di README. Tim yang maintain backend memakai salinan SQL lokal / SQL Editor Supabase.
+
+## Deep link & paket
+
+- Application ID Android: `com.beranibicara.app`
+- Legal: [Syarat penggunaan](https://beranibicara.site/terms-of-service) · [Kebijakan privasi](https://beranibicara.site/privacy-policy)
 
 ---
-*Dibuat dengan ❤️ untuk lingkungan belajar yang lebih baik.*
+
+Dibuat untuk lingkungan belajar yang lebih aman.
