@@ -59,3 +59,9 @@ key.properties
 *google-services*.json
 
 *.sql
+
+# Backend schema & migration notes (keep local)
+/database/*.md
+
+# Edge Functions / Supabase CLI (deploy from local, not public docs)
+/supabase/
